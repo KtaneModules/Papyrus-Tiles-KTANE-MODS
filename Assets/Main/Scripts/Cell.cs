@@ -52,10 +52,6 @@ public class Cell  {
 
     private void SetTileColor(Material m)
     {
-        Debug.Log($"Material Color: {m.color.r} {m.color.g} {m.color.g}");
-        Debug.Log($"Red Color: {redMaterial.color.r} {redMaterial.color.g} {redMaterial.color.b}");
-        //Debug.Log($"Blue Color: {blueMaterial.color.r} {blueMaterial.color.g} {blueMaterial.color.b}");
-
         if (SameColor(m.color, redColor))
         {
             Tile = Tile.Red;
@@ -112,7 +108,7 @@ public class Cell  {
         return Tile.ToString();
     }
 
-    private bool SameColor(Color c1, Color c2)
+    public static bool SameColor(Color c1, Color c2)
     {
         return Mathf.Abs(c1.r - c2.r) < epsilon &&
                Mathf.Abs(c1.g - c2.g) < epsilon &&

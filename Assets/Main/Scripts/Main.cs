@@ -90,18 +90,15 @@ public class Main : MonoBehaviour
             }
         }
 
-       
+
+        bool validMaze = false;
 
         if (!debug)
         {
-            GenerateMaze();
-
-            foreach (Cell c in grid)
+            do
             {
-                Debug.Log($"{c}: {c.GetColor()}");
-            }
-
-
+                validMaze = GenerateMaze();
+            } while (!validMaze);
         }
 
         else
@@ -121,7 +118,7 @@ public class Main : MonoBehaviour
         }
     }
 
-    void GenerateMaze()
+    bool GenerateMaze()
     {
         answer = null;
 
@@ -169,6 +166,11 @@ public class Main : MonoBehaviour
 
                 answer = FindPath(start, end);
 
+                if (!VerifyPath(answer))
+                {
+                    answer = null;
+                }
+
                 if (answer != null)
                 {
                     break;
@@ -189,6 +191,8 @@ public class Main : MonoBehaviour
         {
             string.Join(" ", answer.Select(x => x.ToString()).ToArray());
         }
+
+        return answer != null;
     }
 
     void GenereatDebugMaze()
@@ -250,7 +254,6 @@ public class Main : MonoBehaviour
     {
         Debug.Log($"Start at " + start.ToString());
         Debug.Log($"End at " + end.ToString());
-        pathSmell = Smell.None;
 
         foreach (Cell c in grid)
         {
@@ -271,6 +274,7 @@ public class Main : MonoBehaviour
         {
             Cell next = q.Dequeue();
             next.Visited = true;
+
 
             if (next == end)
             {
@@ -347,7 +351,8 @@ public class Main : MonoBehaviour
 
     List<Cell> GetRidOfBadNeighbors(List<Cell> list, Cell current, Queue<Cell> q)
     {
-        Debug.Log($"Currenct Cell Color:  {current} ({current.GetColor()})");
+
+        //we are not checking for smells becaue that's hard
 
         List<Cell> newList = new List<Cell>();
 
@@ -357,14 +362,6 @@ public class Main : MonoBehaviour
 
             //if it's null, ....yeah
             if (c == null || c.Visited)
-            {
-                continue;
-            }
-
-           
-
-            //if it's blue and the smell is orange, it's not safe
-            if (c.Tile.ToString() == "Blue" && pathSmell == Smell.Orange)
             {
                 continue;
             }
@@ -386,24 +383,50 @@ public class Main : MonoBehaviour
             {
                 Cell next = current.Up == c ? c.Up : current.Right == c ? c.Right : current.Down == c ? c.Down : c.Left;
 
-                //-if next cell is blue and small like orange it's not safe
-                if (next.Tile.ToString() == "Blue" && pathSmell == Smell.Orange)
-                {
-                    continue;
-                }
-
                 //-if next cell is red it's not safe
                 if (next.Tile.ToString() == "Red")
                 {
                     continue;
                 }
-
             }
             newList.Add(c);
         }
 
-        Debug.Log($"Neghbors for {current}: {newList.Count}");
         return newList;
+    }
+
+    bool VerifyPath(List<Cell> path)
+    {
+        Smell smell = Smell.None;
+
+
+        for (int i = 0; i < path.Count; i++)
+        {
+            Cell c = path[i];
+
+            if (c.GetColor() == "Orange")
+            {
+                smell = Smell.Orange;
+            }
+
+            else if (c.GetColor() == "Purple")
+            {
+                smell = Smell.Lemon;
+            }
+
+            if (i != path.Count - 1)
+            {
+                Cell next = path[i + 1];
+
+                if (smell == Smell.Orange && c.GetColor() == "Blue")
+                {
+                    return false;
+                }
+            }
+
+        }
+
+        return true;
     }
 
 #pragma warning disable 414
