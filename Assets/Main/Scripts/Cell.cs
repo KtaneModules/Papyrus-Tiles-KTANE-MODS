@@ -61,25 +61,25 @@ public class Cell  {
             Tile = Tile.Red;
         }
 
-        if (SameColor(m.color, orangeColor))
+        else if (SameColor(m.color, orangeColor))
         {
             Tile = Tile.Orange;
         }
 
 
-        if (SameColor(m.color, greenColor))
+        else if(SameColor(m.color, greenColor))
         {
             Tile = Tile.Green;
         }
 
 
-        if (SameColor(m.color, blueColor))
+        else if(SameColor(m.color, blueColor))
         {
             Tile = Tile.Blue;
         }
 
 
-        if (SameColor(m.color, purpleColor))
+        else if(SameColor(m.color, purpleColor))
         {
             Tile = Tile.Purple;
         }
