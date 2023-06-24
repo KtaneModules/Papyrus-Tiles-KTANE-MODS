@@ -232,12 +232,15 @@ public class Main : MonoBehaviour
                 pathSmell = Smell.Orange;
             }
 
-            //if cell is purple, apply lemon smell and based off parent, go to the next cell immedialty
+            //if cell is purple, apply lemon smell and based off parent, go to the next cell immedialty (we already checked it was safe before we got here)
             else if (currentCell.Mesh.material == materials[4])
             {
                 pathSmell = Smell.Lemon;
 
-                if
+                if (currentCell.Parent == currentCell.Up)
+                {
+
+                }
             }
 
 
@@ -255,7 +258,7 @@ public class Main : MonoBehaviour
 
             //Debug.Log("BEFORE neighbors are " + string.Join(" ", neighbors.Select(x => x == null ? "poop" : x.ToString()).ToArray()));
 
-            neighbors = GetRidOfBadNeighbors(neighbors, closed);
+            neighbors = GetRidOfBadNeighbors(neighbors, closed, currentCell);
 
             //Debug.Log("neighbors are " + string.Join(" ", neighbors.Select(x => ($"{x.ToString()} F={x.FinalCost}")).ToArray()));
 
@@ -299,8 +302,6 @@ public class Main : MonoBehaviour
             return null;
         }
 
-
-
         List<Cell> path = new List<Cell>();
 
         Cell current = end;
@@ -335,19 +336,53 @@ public class Main : MonoBehaviour
         }
     }
 
-    List<Cell> GetRidOfBadNeighbors(List<Cell> list, List<Cell> closed)
+    List<Cell> GetRidOfBadNeighbors(List<Cell> list, List<Cell> closed, Cell current)
     {
         List<Cell> newList = new List<Cell>();
 
+        for (int i = 0; i < list.Count; i++)
+        {
+            Cell c = list[i];
 
+            //if it's in the the closed list 
+            
+            //if it's null, ....yeah
+            if (c == null || closed.Contains(c))
+            {
+                continue;
+            }
 
-        //if it's blue and the smell is orange, it's not safe
+            //if it's blue and the smell is orange, it's not safe
+            if (c.Mesh.material == materials[3] && pathSmell == Smell.Orange)
+            {
+                continue;
+            }
 
-        //if it's purple, check next cell:
-        //-if next cell is blue and small like orange it's not safe
-        //-if next cell is red it's not safe
+            //if it's red it's not safe
+            if (c.Mesh.material == materials[0])
+            {
+                continue;
+            }
 
+            //if it's purple, check next cell:
+            if (c.Mesh.material == materials[4])
+            {
+                Cell next = current.Up == c ? c.Up : current.Right == c ? c.Right : current.Down == c ? c.Down : c.Left;
 
+                //-if next cell is blue and small like orange it's not safe
+                if (c.Mesh.material == materials[3] && pathSmell == Smell.Orange)
+                {
+                    continue;
+                }
+
+                //-if next cell is red it's not safe
+                if (c.Mesh.material == materials[0])
+                {
+                    continue;
+                }
+            }
+
+        }
         return newList;
     }
 
