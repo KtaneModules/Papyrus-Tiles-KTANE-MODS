@@ -95,10 +95,18 @@ public class Main : MonoBehaviour
 
         if (!debug)
         {
+
+            int count = 0;
             do
             {
+                count++;
                 validMaze = GenerateMaze();
-            } while (!validMaze);
+            } while (!validMaze && count < 100);
+
+            if (count == 100)
+            {
+                Debug.Log("Couldn't generate a good maze");
+            }
         }
 
         else
@@ -166,7 +174,8 @@ public class Main : MonoBehaviour
 
                 answer = FindPath(start, end);
 
-                if (!VerifyPath(answer))
+
+                if (answer != null && !ValidPath(answer))
                 {
                     answer = null;
                 }
@@ -267,6 +276,7 @@ public class Main : MonoBehaviour
         Queue<Cell> q = new Queue<Cell>();
 
         q.Enqueue(start);
+
         
         int count = 0;
 
@@ -275,6 +285,48 @@ public class Main : MonoBehaviour
             Cell next = q.Dequeue();
             next.Visited = true;
 
+            if (next.GetColor() == "Purple")
+            {
+                Movement move;
+
+                Movement newMove;
+                try
+                {
+                    move = allMoves.First(x => x.end == next);
+
+                    if (move.start.Up == move.end)
+                    {
+                        next = next.Up;
+                        newMove = new Movement(next, next.Up);
+                    }
+
+                    else if (move.start.Right == move.end)
+                    {
+                        next = next.Right;
+                        newMove = new Movement(next, next.Right);
+                    }
+
+                    else if (move.start.Down == move.end)
+                    {
+                        next = next.Down;
+                        newMove = new Movement(next, next.Down);
+                    }
+
+                    else
+                    {
+                        next = next.Left;
+                        newMove = new Movement(next, next.Left);
+                    }
+
+                    allMoves.Add(newMove);
+                }
+
+                catch
+                {
+                    Debug.Log("Had problems with finding last move");
+                    return null;
+                }
+            }
 
             if (next == end)
             {
@@ -332,10 +384,9 @@ public class Main : MonoBehaviour
             tempPath.Add(relMovements[i].end);
         }
 
-        foreach (Cell c in tempPath)
-        {
-            Debug.Log(c);
-        }
+        string line = string.Join(" ", tempPath.Select(x => x.ToString()).ToArray());
+
+        Debug.Log(line);
 
         return tempPath;
 
@@ -395,7 +446,7 @@ public class Main : MonoBehaviour
         return newList;
     }
 
-    bool VerifyPath(List<Cell> path)
+    bool ValidPath(List<Cell> path)
     {
         Smell smell = Smell.None;
 

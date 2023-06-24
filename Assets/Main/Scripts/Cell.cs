@@ -100,7 +100,7 @@ public class Cell  {
 
     public override string ToString()
     {
-        return $"{Row} {Col}";
+        return $"({Row} {Col})";
     }
 
     public string GetColor()
