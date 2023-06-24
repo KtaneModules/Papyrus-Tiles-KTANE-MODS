@@ -24,10 +24,8 @@ public class Cell  {
     public Cell Right { get; set; }
     public Cell Down { get; set; }
     public Cell Left { get; set; }
-    public int Heuristic { get; set; }
-    public int FinalCost { get; set; }
-    public int G { get; set; }
     public Cell Parent { get; set; }
+    public bool Visited { get; set; }
 
     public Cell(int row, int col, KMSelectable button)
     {

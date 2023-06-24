@@ -32,15 +32,19 @@ public class Main : MonoBehaviour
     Smell currentSmell;
     Smell pathSmell;
 
+    [SerializeField]
+    GameObject prefab;
+
 
     static int ModuleIdCounter = 1;
     int ModuleId;
     private bool ModuleSolved;
+    bool debug = false;
 
     void Awake()
     {
+
         ModuleSolved = false;
-        GameObject[] obj = new GameObject[48];
         ModuleId = ModuleIdCounter++;
 
         buttons = GetComponent<KMSelectable>().Children;
@@ -59,11 +63,6 @@ public class Main : MonoBehaviour
             for (int col = 0; col < 8; col++)
             {
                 int index = row * 8 + col;
-
-                Debug.Log(row);
-                Debug.Log(col);
-                Debug.Log(index);
-
                 grid[row, col] = new Cell(row, col, buttons[index]);
 
                 buttons[index].OnInteract += delegate () { KeypadPress(buttons[index]); return false; };
@@ -82,11 +81,21 @@ public class Main : MonoBehaviour
             }
         }
 
-        //GenerateMaze();
+        if (!debug)
+        {
+            GenerateMaze();
+
+        }
+
+       else
+        {
+
+        }
     }
 
     void KeypadPress(KMSelectable button)
     {
+        Debug.Log(GetCell(button));
         button.AddInteractionPunch(1f);
 
         if (ModuleSolved)
@@ -102,55 +111,48 @@ public class Main : MonoBehaviour
         //dont have purple spawn on edges
         Material purple = materials[4];
 
-        do
+
+        foreach (Cell c in grid)
         {
-            foreach (Cell c in grid)
+            c.SetRandomMaterial();
+        }
+
+        for (int i = 0; i < 8; i++)
+        {
+            RegenerateCell(grid[0, i]);
+            RegenerateCell(grid[5, i]);
+
+            if (i < 6)
             {
-                c.SetRandomMaterial();
+                RegenerateCell(grid[i, 7]);
+                RegenerateCell(grid[i, 0]);
+            }
+        }
+
+        List<Cell> startingCells = new List<Cell>();
+        List<Cell> endingCells = new List<Cell>();
+
+        for (int i = 0; i < 6; i++)
+        {
+            if (grid[i, 0].Mesh.material != materials[0])
+            {
+                startingCells.Add(grid[i, 0]);
             }
 
-            for (int i = 0; i < 8; i++)
+            if (grid[i, 7].Mesh.material != materials[0])
             {
-                RegenerateCell(grid[0, i]);
-                RegenerateCell(grid[5, i]);
-
-                if (i < 6)
-                {
-                    RegenerateCell(grid[i, 7]);
-                    RegenerateCell(grid[i, 0]);
-                }
+                endingCells.Add(grid[i, 7]);
             }
+        }
 
-            List<Cell> startingCells = new List<Cell>();
-            List<Cell> endingCells = new List<Cell>();
-
-            for (int i = 0; i < 6; i++)
+        for (int startIndex = 0; startIndex < startingCells.Count; startIndex++)
+        {
+            for (int endIndex = 0; endIndex < endingCells.Count; endIndex++)
             {
-                if (grid[i, 0].Mesh.material != materials[0])
-                {
-                    startingCells.Add(grid[i, 0]);
-                }
+                Cell start = startingCells[startIndex];
+                Cell end = endingCells[endIndex];
 
-                if (grid[i, 7].Mesh.material != materials[0])
-                {
-                    endingCells.Add(grid[i, 0]);
-                }
-            }
-
-            for (int startIndex = 0; startIndex < startingCells.Count; startIndex++)
-            {
-                for (int endIndex = 0; endIndex < endingCells.Count; endIndex++)
-                {
-                    Cell start = startingCells[startIndex];
-                    Cell end = endingCells[endIndex];
-
-                    answer = FindPath(start, end);
-
-                    if (answer != null)
-                    {
-                        break;
-                    }
-                }
+                answer = FindPath(start, end);
 
                 if (answer != null)
                 {
@@ -158,12 +160,38 @@ public class Main : MonoBehaviour
                 }
             }
 
+            if (answer != null)
+            {
+                break;
+            }
+        }
 
+        if (answer == null)
+        {
+            Debug.Log("L Bozo");
+        }
+        else
+        {
+            string.Join(" ", answer.Select(x => x.ToString()).ToArray());
+        }
+    }
 
-        } while (answer == null);
+    void GenereatDebugMaze()
+    {
 
+    }
 
+    Cell GetCell(KMSelectable button)
+    {
+        foreach (Cell c in grid)
+        {
+            if (c.Button == button)
+            {
+                return c;
+            }
+        }
 
+        return null;
     }
     void ResetModule()
     {
@@ -207,26 +235,92 @@ public class Main : MonoBehaviour
     {
         Debug.Log($"Start at " + start.ToString());
         Debug.Log($"End at " + end.ToString());
-
-        SetHeristic(end);
-
-        List<Cell> open = new List<Cell>();
-        List<Cell> closed = new List<Cell>();
         pathSmell = Smell.None;
 
-        return null;
-
-    }
-
-    void SetHeristic(Cell end)
-    {
         foreach (Cell c in grid)
         {
-            c.Heuristic = Math.Abs(end.Row - c.Row) + Math.Abs(end.Col - c.Col);
-            c.Parent = null;
-            c.FinalCost = 0;
-            c.G = 0;
+            c.Visited = false;
         }
+
+        const int limit = 1000;
+        List<Cell> path = new List<Cell>();
+        List<Movement> allMoves = new List<Movement>();
+
+        Queue<Cell> q = new Queue<Cell>();
+
+        q.Enqueue(start);
+        
+        int count = 0;
+
+        while (q.Count != 0 && count < limit)
+        {
+            Cell next = q.Dequeue();
+            next.Visited = true;
+
+            if (next == end)
+            {
+                break;
+            }
+
+            List<Cell> neighbors = new List<Cell> { next.Up, next.Left, next.Down, next.Right };
+
+            neighbors = GetRidOfBadNeighbors(neighbors, next, q);
+            //Debug.Log("Neighbors Count:" + neighbors.Count);
+
+            foreach (Cell c in neighbors)
+            {
+                q.Enqueue(c);
+                allMoves.Add(new Movement(next,c));
+            }
+
+            count++;
+        }
+
+        if (count == limit)
+        {
+            Debug.Log("Infinite loop has been found");
+            return null;
+        }
+
+        //start at end and work backwards to start
+
+        Debug.Log("All moves count: " + allMoves.Count);
+
+        Movement lastMove;
+
+        try
+        {
+            lastMove = allMoves.First(x => x.end == end);
+        }
+
+        catch
+        {
+            Debug.Log("Had problems with finding last move");
+            return null;
+        }
+
+        List<Movement> relMovements = new List<Movement>() { lastMove };
+
+        while (lastMove.start != start)
+        {
+            lastMove = allMoves.First(x => x.end == lastMove.start);
+            relMovements.Add(lastMove);
+        }
+
+        List<Cell> tempPath = new List<Cell>();
+
+        for (int i = relMovements.Count - 1; i > -1; i--)
+        {
+            tempPath.Add(relMovements[i].end);
+        }
+
+        foreach (Cell c in tempPath)
+        {
+            Debug.Log(c);
+        }
+
+        return tempPath;
+
     }
 
     void RegenerateCell(Cell c)
@@ -239,7 +333,7 @@ public class Main : MonoBehaviour
         }
     }
 
-    List<Cell> GetRidOfBadNeighbors(List<Cell> list, List<Cell> closed, Cell current)
+    List<Cell> GetRidOfBadNeighbors(List<Cell> list, Cell current, Queue<Cell> q)
     {
         List<Cell> newList = new List<Cell>();
 
@@ -247,13 +341,13 @@ public class Main : MonoBehaviour
         {
             Cell c = list[i];
 
-            //if it's in the the closed list 
-            
             //if it's null, ....yeah
-            if (c == null || closed.Contains(c))
+            if (c == null || c.Visited)
             {
                 continue;
             }
+
+           
 
             //if it's blue and the smell is orange, it's not safe
             if (c.Mesh.material == materials[3] && pathSmell == Smell.Orange)
@@ -263,6 +357,12 @@ public class Main : MonoBehaviour
 
             //if it's red it's not safe
             if (c.Mesh.material == materials[0])
+            {
+                continue;
+            }
+
+            //if it's in the queue and not purple dont add it
+            if (c.Mesh.material == materials[4] && q.Contains(c))
             {
                 continue;
             }
@@ -283,8 +383,9 @@ public class Main : MonoBehaviour
                 {
                     continue;
                 }
-            }
 
+            }
+            newList.Add(c);
         }
         return newList;
     }
