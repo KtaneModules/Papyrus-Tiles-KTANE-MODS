@@ -127,29 +127,10 @@ public class Main : MonoBehaviour
 
         //dont have purple spawn on edges
 
-        for (int row = 0; row < 6; row++)
-        {
-            for (int col = 0; col < 8; col++)
-            {
-                Cell c = grid[row, col];
-
-                if (row == 0 && col == 0)
-                {
-                    c.SetMaterial(materials[0]);
-                }
-
-                else
-                {
-                    c.SetRandomMaterial();
-                }
-            }
-        }
-
-        /*
         foreach (Cell c in grid)
         {
             c.SetRandomMaterial();
-        }*/
+        }
 
         for (int i = 0; i < 8; i++)
         {
