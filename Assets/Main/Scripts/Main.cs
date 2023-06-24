@@ -62,7 +62,6 @@ public class Main : MonoBehaviour
                 g.transform.position = nwePos;
 
                 obj[i * col + j] = g;
-                //Debug.Log(i * col + j);
             }
         }
 
@@ -79,6 +78,11 @@ public class Main : MonoBehaviour
         */
 
         //button.OnInteract += delegate () { buttonPress(); return false; };
+
+    }
+
+    void GenerateMaze()
+    {
 
     }
     void ResetModule()
