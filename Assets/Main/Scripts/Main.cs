@@ -81,6 +81,11 @@ public class Main : MonoBehaviour
             }
         }
 
+        foreach (Cell c in grid)
+        {
+            Debug.Log($"{c}: {c.GetMaterialName()}");
+        }
+
         if (!debug)
         {
             GenerateMaze();
@@ -265,7 +270,6 @@ public class Main : MonoBehaviour
             List<Cell> neighbors = new List<Cell> { next.Up, next.Left, next.Down, next.Right };
 
             neighbors = GetRidOfBadNeighbors(neighbors, next, q);
-            //Debug.Log("Neighbors Count:" + neighbors.Count);
 
             foreach (Cell c in neighbors)
             {
@@ -307,7 +311,7 @@ public class Main : MonoBehaviour
             relMovements.Add(lastMove);
         }
 
-        List<Cell> tempPath = new List<Cell>();
+        List<Cell> tempPath = new List<Cell>() { start };
 
         for (int i = relMovements.Count - 1; i > -1; i--)
         {
@@ -335,6 +339,8 @@ public class Main : MonoBehaviour
 
     List<Cell> GetRidOfBadNeighbors(List<Cell> list, Cell current, Queue<Cell> q)
     {
+        Debug.Log($"Currenct Cell Color:  {current} ({current.GetColor()})");
+
         List<Cell> newList = new List<Cell>();
 
         for (int i = 0; i < list.Count; i++)
@@ -387,6 +393,8 @@ public class Main : MonoBehaviour
             }
             newList.Add(c);
         }
+
+        Debug.Log($"Neghbors for {current}: {newList.Count}");
         return newList;
     }
 

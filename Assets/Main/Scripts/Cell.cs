@@ -40,34 +40,39 @@ public class Cell  {
         }
     }
 
-    private Tile SetTileColor(Material m)
+    private void SetTileColor(Material m)
     {
         if (m == redMaterial)
         {
-            return Tile.Red;
+            tile = Tile.Red;
         }
 
         if (m == orangeMaterial)
         {
-            return Tile.Orange;
+            tile = Tile.Orange;
         }
 
         if (m == greenMaterial)
         {
-            return Tile.Green;
+            tile = Tile.Green;
         }
 
         if (m == blueMaterial)
         {
-            return Tile.Blue;
+            tile = Tile.Blue;
         }
 
         if (m == purpleMaterial)
         {
-            return Tile.Purple;
+            tile = Tile.Purple;
         }
 
-        return Tile.Pink;
+
+        else
+        {
+            tile = Tile.Pink;
+        }
+
     }
 
     public void SetMaterial(Material m)
@@ -86,8 +91,14 @@ public class Cell  {
         return $"{Row} {Col}";
     }
 
-    public string GetColorLetter()
+    public string GetColor()
     {
-        return "" + tile.ToString()[0];
+        return "" + tile.ToString();
+    }
+
+    public string GetMaterialName()
+    {
+        return Mesh.material.name;
+
     }
 }
