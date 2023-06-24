@@ -60,6 +60,10 @@ public class Main : MonoBehaviour
             {
                 int index = row * 8 + col;
 
+                Debug.Log(row);
+                Debug.Log(col);
+                Debug.Log(index);
+
                 grid[row, col] = new Cell(row, col, buttons[index]);
 
                 buttons[index].OnInteract += delegate () { KeypadPress(buttons[index]); return false; };
@@ -78,7 +82,7 @@ public class Main : MonoBehaviour
             }
         }
 
-        GenerateMaze();
+        //GenerateMaze();
     }
 
     void KeypadPress(KMSelectable button)
@@ -210,109 +214,8 @@ public class Main : MonoBehaviour
         List<Cell> closed = new List<Cell>();
         pathSmell = Smell.None;
 
-        start.G = 0;
+        return null;
 
-        Cell currentCell = start;
-
-        int count = 0;
-
-        while (!open.Contains(end)) //change to when end is reached
-        {
-            count++;
-
-            if (count == 100)
-            {
-                Debug.Log("An infiinte loop has occured");
-                break;
-            }
-
-            //if cell is orange, apply orange smell
-            if (currentCell.Mesh.material == materials[1])
-            {
-                pathSmell = Smell.Orange;
-            }
-
-            //if cell is purple, apply lemon smell and based off parent, go to the next cell immedialty (we already checked it was safe before we got here)
-            else if (currentCell.Mesh.material == materials[4])
-            {
-                pathSmell = Smell.Lemon;
-
-                if (currentCell.Parent == currentCell.Up)
-                {
-
-                }
-            }
-
-
-
-
-            //Debug.Log("Current cell is " + currentCell.ToString());
-
-            List<Cell> neighbors = new List<Cell>();
-
-            neighbors.Add(currentCell.Up);
-            neighbors.Add(currentCell.Left);
-            neighbors.Add(currentCell.Down);
-            neighbors.Add(currentCell.Right);
-
-
-            //Debug.Log("BEFORE neighbors are " + string.Join(" ", neighbors.Select(x => x == null ? "poop" : x.ToString()).ToArray()));
-
-            neighbors = GetRidOfBadNeighbors(neighbors, closed, currentCell);
-
-            //Debug.Log("neighbors are " + string.Join(" ", neighbors.Select(x => ($"{x.ToString()} F={x.FinalCost}")).ToArray()));
-
-            foreach (Cell c in neighbors)
-            {
-                if (!open.Contains(c))
-                {
-                    c.Parent = currentCell;
-                    open.Add(c);
-                    c.G = c.Parent.G + 1;
-                    c.FinalCost = c.G + c.Heuristic;
-                }
-
-                else
-                {
-                    int potentialCost = c.Parent.G + 1;
-                    if (c.FinalCost > potentialCost)
-                    {
-                        c.Parent = currentCell;
-                        c.G = potentialCost;
-                        c.FinalCost = c.G + c.Heuristic;
-                    }
-                }
-            }
-
-            open.Remove(currentCell);
-            closed.Add(currentCell);
-
-            if (open.Count == 0) //there is no path to end
-            {
-                return null;
-            }
-            open = open.OrderBy(x => x.FinalCost).ToList();
-            currentCell = open.First();
-            //Debug.Log("Cells in open list " + string.Join(" ", open.Select(x => ($"{x.ToString()} F={x.FinalCost}")).ToArray()));
-            neighbors.Clear();
-        }
-
-        if (!open.Contains(end))
-        {
-            return null;
-        }
-
-        List<Cell> path = new List<Cell>();
-
-        Cell current = end;
-        while (!path.Contains(start))
-        {
-            path.Add(current);
-            current = current.Parent;
-        }
-        path.Reverse();
-
-        return path;
     }
 
     void SetHeristic(Cell end)
