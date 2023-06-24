@@ -7,7 +7,7 @@ public class Cell  {
     public int Row { get; private set; }
     public int Col { get; private set; }
     public KMSelectable Button { get; private set; }
-    public Tile tile;
+    public Tile Tile { get; private set; }
 
     public static Material redMaterial { get; set; }
     public static Material orangeMaterial { get; set; }
@@ -15,6 +15,16 @@ public class Cell  {
     public static Material blueMaterial { get; set; }
     public static Material purpleMaterial { get; set; }
     public static Material pinkMaterial { get; set; }
+
+    public static Color redColor { get; set; }
+    public static Color orangeColor { get; set; }
+    public static Color greenColor { get; set; }
+    public static Color blueColor { get; set; }
+    public static Color purpleColor { get; set; }
+    public static Color pinkColor { get; set; }
+
+    private const float epsilon = 0.0001f;
+
 
     private Material[] materials;
 
@@ -42,42 +52,48 @@ public class Cell  {
 
     private void SetTileColor(Material m)
     {
-        if (m == redMaterial)
+        Debug.Log($"Material Color: {m.color.r} {m.color.g} {m.color.g}");
+        Debug.Log($"Red Color: {redMaterial.color.r} {redMaterial.color.g} {redMaterial.color.b}");
+        //Debug.Log($"Blue Color: {blueMaterial.color.r} {blueMaterial.color.g} {blueMaterial.color.b}");
+
+        if (SameColor(m.color, redColor))
         {
-            tile = Tile.Red;
+            Tile = Tile.Red;
         }
 
-        if (m == orangeMaterial)
+        if (SameColor(m.color, orangeColor))
         {
-            tile = Tile.Orange;
+            Tile = Tile.Orange;
         }
 
-        if (m == greenMaterial)
+
+        if (SameColor(m.color, greenColor))
         {
-            tile = Tile.Green;
+            Tile = Tile.Green;
         }
 
-        if (m == blueMaterial)
+
+        if (SameColor(m.color, blueColor))
         {
-            tile = Tile.Blue;
+            Tile = Tile.Blue;
         }
 
-        if (m == purpleMaterial)
-        {
-            tile = Tile.Purple;
-        }
 
+        if (SameColor(m.color, purpleColor))
+        {
+            Tile = Tile.Purple;
+        }
 
         else
         {
-            tile = Tile.Pink;
+            Tile = Tile.Pink;
         }
 
     }
 
     public void SetMaterial(Material m)
     {
-        Mesh.material = m;
+        Mesh.sharedMaterial = m;
         SetTileColor(m);
     }
 
@@ -93,12 +109,13 @@ public class Cell  {
 
     public string GetColor()
     {
-        return "" + tile.ToString();
+        return Tile.ToString();
     }
 
-    public string GetMaterialName()
+    private bool SameColor(Color c1, Color c2)
     {
-        return Mesh.material.name;
-
+        return Mathf.Abs(c1.r - c2.r) < epsilon &&
+               Mathf.Abs(c1.g - c2.g) < epsilon &&
+               Mathf.Abs(c1.b - c2.b) < epsilon;
     }
 }

@@ -56,6 +56,15 @@ public class Main : MonoBehaviour
         Cell.purpleMaterial = materials[4];
         Cell.pinkMaterial = materials[5];
 
+        Cell.redColor = Cell.redMaterial.color;
+        Cell.orangeColor = Cell.orangeMaterial.color;
+        Cell.greenColor = Cell.greenMaterial.color;
+        Cell.blueColor = Cell.blueMaterial.color;
+        Cell.purpleColor = Cell.purpleMaterial.color;
+        Cell.pinkColor = Cell.pinkMaterial.color;
+
+
+
         grid = new Cell[6, 8];
 
         for (int row = 0; row < 6; row++)
@@ -81,18 +90,21 @@ public class Main : MonoBehaviour
             }
         }
 
-        foreach (Cell c in grid)
-        {
-            Debug.Log($"{c}: {c.GetMaterialName()}");
-        }
+       
 
         if (!debug)
         {
             GenerateMaze();
 
+            foreach (Cell c in grid)
+            {
+                Debug.Log($"{c}: {c.GetColor()}");
+            }
+
+
         }
 
-       else
+        else
         {
 
         }
@@ -114,13 +126,30 @@ public class Main : MonoBehaviour
         answer = null;
 
         //dont have purple spawn on edges
-        Material purple = materials[4];
 
+        for (int row = 0; row < 6; row++)
+        {
+            for (int col = 0; col < 8; col++)
+            {
+                Cell c = grid[row, col];
 
+                if (row == 0 && col == 0)
+                {
+                    c.SetMaterial(materials[0]);
+                }
+
+                else
+                {
+                    c.SetRandomMaterial();
+                }
+            }
+        }
+
+        /*
         foreach (Cell c in grid)
         {
             c.SetRandomMaterial();
-        }
+        }*/
 
         for (int i = 0; i < 8; i++)
         {
@@ -139,12 +168,12 @@ public class Main : MonoBehaviour
 
         for (int i = 0; i < 6; i++)
         {
-            if (grid[i, 0].Mesh.material != materials[0])
+            if (grid[i, 0].Tile.ToString() != "Red")
             {
                 startingCells.Add(grid[i, 0]);
             }
 
-            if (grid[i, 7].Mesh.material != materials[0])
+            if (grid[i, 7].Tile.ToString() != "Red")
             {
                 endingCells.Add(grid[i, 7]);
             }
@@ -329,9 +358,7 @@ public class Main : MonoBehaviour
 
     void RegenerateCell(Cell c)
     {
-        Material purple = materials[4];
-
-        while (c.Mesh.material == purple)
+        while (c.Tile.ToString() == "Purple")
         {
             c.SetRandomMaterial();
         }
@@ -356,36 +383,36 @@ public class Main : MonoBehaviour
            
 
             //if it's blue and the smell is orange, it's not safe
-            if (c.Mesh.material == materials[3] && pathSmell == Smell.Orange)
+            if (c.Tile.ToString() == "Blue" && pathSmell == Smell.Orange)
             {
                 continue;
             }
 
             //if it's red it's not safe
-            if (c.Mesh.material == materials[0])
+            if (c.Tile.ToString() == "Red")
             {
                 continue;
             }
 
             //if it's in the queue and not purple dont add it
-            if (c.Mesh.material == materials[4] && q.Contains(c))
+            if (c.Tile.ToString() == "Purple" && q.Contains(c))
             {
                 continue;
             }
 
             //if it's purple, check next cell:
-            if (c.Mesh.material == materials[4])
+            if (c.Tile.ToString() == "Purple")
             {
                 Cell next = current.Up == c ? c.Up : current.Right == c ? c.Right : current.Down == c ? c.Down : c.Left;
 
                 //-if next cell is blue and small like orange it's not safe
-                if (c.Mesh.material == materials[3] && pathSmell == Smell.Orange)
+                if (next.Tile.ToString() == "Blue" && pathSmell == Smell.Orange)
                 {
                     continue;
                 }
 
                 //-if next cell is red it's not safe
-                if (c.Mesh.material == materials[0])
+                if (next.Tile.ToString() == "Red")
                 {
                     continue;
                 }
