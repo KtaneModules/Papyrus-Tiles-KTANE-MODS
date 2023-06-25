@@ -30,16 +30,11 @@ public class Main : MonoBehaviour
     List<Cell> answer;
 
     Smell currentSmell;
-    Smell pathSmell;
-
-    [SerializeField]
-    GameObject prefab;
-
 
     static int ModuleIdCounter = 1;
     int ModuleId;
     private bool ModuleSolved;
-    bool debug = false;
+    bool debug = true;
 
     void Awake()
     {
@@ -66,35 +61,22 @@ public class Main : MonoBehaviour
 
 
         grid = new Cell[6, 8];
-
-        for (int row = 0; row < 6; row++)
-        {
-            for (int col = 0; col < 8; col++)
-            {
-                int index = row * 8 + col;
-                grid[row, col] = new Cell(row, col, buttons[index]);
-
-                buttons[index].OnInteract += delegate () { KeypadPress(buttons[index]); return false; };
-            }
-        }
-
-        for (int row = 0; row < 6; row++)
-        {
-            for (int col = 0; col < 8; col++)
-            {
-                Cell c = grid[row, col];
-                c.Up = row - 1 < 0 ? null : grid[row - 1, col];
-                c.Down = row + 1 > 5 ? null : grid[row + 1, col];
-                c.Left = col - 1 < 0 ? null : grid[row, col -1];
-                c.Right = col + 1 > 7 ? null : grid[row, col + 1];
-            }
-        }
-
-
-        bool validMaze = false;
-
         if (!debug)
         {
+            for (int row = 0; row < 6; row++)
+            {
+                for (int col = 0; col < 8; col++)
+                {
+                    int index = row * 8 + col;
+                    grid[row, col] = new Cell(row, col, buttons[index]);
+
+                    buttons[index].OnInteract += delegate () { KeypadPress(buttons[index]); return false; };
+                }
+            }
+
+            SetNeighbors();
+
+            bool validMaze = false;
 
             int count = 0;
             do
@@ -111,8 +93,10 @@ public class Main : MonoBehaviour
 
         else
         {
-
+            GenereatDebugMaze();
+            SetNeighbors();
         }
+
     }
 
     void KeypadPress(KMSelectable button)
@@ -149,6 +133,45 @@ public class Main : MonoBehaviour
             }
         }
 
+        return GetThroughMaze();
+    }
+
+    void GenereatDebugMaze()
+    {
+        Material[,] grid1 = new Material[,]
+        {
+            { materials[2], materials[5], materials[0], materials[1], materials[0], materials[3], materials[0], materials[3]},
+            { materials[5], materials[1], materials[4], materials[4], materials[4], materials[4], materials[3], materials[2]},
+            { materials[5], materials[2], materials[2], materials[5], materials[5], materials[1], materials[2], materials[2]},
+            { materials[0], materials[3], materials[1], materials[3], materials[4], materials[4], materials[0], materials[5]},
+            { materials[0], materials[1], materials[4], materials[3], materials[2], materials[3], materials[1], materials[3]},
+            { materials[0], materials[2], materials[1], materials[1], materials[5], materials[5], materials[2], materials[0]},
+
+        };
+
+        for (int row = 0; row < 6; row++)
+        {
+            for (int col = 0; col < 8; col++)
+            {
+                int index = row * 8 + col;
+                grid[row, col] = new Cell(row, col, buttons[index], grid1[row, col]);
+
+                buttons[index].OnInteract += delegate () { KeypadPress(buttons[index]); return false; };
+            }
+        }
+
+        answer = FindPath(grid[2, 0], grid[2, 7]);
+
+        if (answer == null)
+        {
+            Debug.Log("Could not find path from (2 0), (2, 7)");
+        }
+
+        //GetThroughMaze();
+    }
+
+    bool GetThroughMaze()
+    {
         List<Cell> startingCells = new List<Cell>();
         List<Cell> endingCells = new List<Cell>();
 
@@ -198,15 +221,25 @@ public class Main : MonoBehaviour
         }
         else
         {
-            string.Join(" ", answer.Select(x => x.ToString()).ToArray());
+            Debug.Log("Final Answer: " + LogList(answer));
         }
 
         return answer != null;
     }
 
-    void GenereatDebugMaze()
+    void SetNeighbors()
     {
-
+        for (int row = 0; row < 6; row++)
+        {
+            for (int col = 0; col < 8; col++)
+            {
+                Cell c = grid[row, col];
+                c.Up = row - 1 < 0 ? null : grid[row - 1, col];
+                c.Down = row + 1 > 5 ? null : grid[row + 1, col];
+                c.Left = col - 1 < 0 ? null : grid[row, col - 1];
+                c.Right = col + 1 > 7 ? null : grid[row, col + 1];
+            }
+        }
     }
 
     Cell GetCell(KMSelectable button)
@@ -261,8 +294,7 @@ public class Main : MonoBehaviour
 
     List<Cell> FindPath(Cell start, Cell end)
     {
-        Debug.Log($"Start at " + start.ToString());
-        Debug.Log($"End at " + end.ToString());
+        Debug.Log($"Start at {start}. End at {end}");
 
         foreach (Cell c in grid)
         {
@@ -285,51 +317,9 @@ public class Main : MonoBehaviour
             Cell next = q.Dequeue();
             next.Visited = true;
 
-            if (next.GetColor() == "Purple")
-            {
-                Movement move;
-
-                Movement newMove;
-                try
-                {
-                    move = allMoves.First(x => x.end == next);
-
-                    if (move.start.Up == move.end)
-                    {
-                        next = next.Up;
-                        newMove = new Movement(next, next.Up);
-                    }
-
-                    else if (move.start.Right == move.end)
-                    {
-                        next = next.Right;
-                        newMove = new Movement(next, next.Right);
-                    }
-
-                    else if (move.start.Down == move.end)
-                    {
-                        next = next.Down;
-                        newMove = new Movement(next, next.Down);
-                    }
-
-                    else
-                    {
-                        next = next.Left;
-                        newMove = new Movement(next, next.Left);
-                    }
-
-                    allMoves.Add(newMove);
-                }
-
-                catch
-                {
-                    Debug.Log("Had problems with finding last move");
-                    return null;
-                }
-            }
-
             if (next == end)
             {
+                Debug.Log("Path to end was found");
                 break;
             }
 
@@ -343,6 +333,8 @@ public class Main : MonoBehaviour
                 allMoves.Add(new Movement(next,c));
             }
 
+            LogList(neighbors);
+
             count++;
         }
 
@@ -353,19 +345,17 @@ public class Main : MonoBehaviour
         }
 
         //start at end and work backwards to start
-
-        Debug.Log("All moves count: " + allMoves.Count);
-
         Movement lastMove;
 
         try
         {
+            Debug.Log("All moves count: " + allMoves.Count);
             lastMove = allMoves.First(x => x.end == end);
         }
 
         catch
         {
-            Debug.Log("Had problems with finding last move");
+            Debug.Log("First move to the end can't be found");
             return null;
         }
 
@@ -384,9 +374,7 @@ public class Main : MonoBehaviour
             tempPath.Add(relMovements[i].end);
         }
 
-        string line = string.Join(" ", tempPath.Select(x => x.ToString()).ToArray());
-
-        Debug.Log(line);
+        Debug.Log(LogList(tempPath));
 
         return tempPath;
 
@@ -446,6 +434,11 @@ public class Main : MonoBehaviour
         return newList;
     }
 
+    private string LogList(List<Cell> list)
+    {
+        return string.Join(" ", list.Select(x => x.ToString()).ToArray());
+    }
+
     bool ValidPath(List<Cell> path)
     {
         Smell smell = Smell.None;
@@ -473,8 +466,38 @@ public class Main : MonoBehaviour
                 {
                     return false;
                 }
-            }
 
+                //if you on a purple cell, and you are not going the same direction that you wernt before, this is not valid
+                if (i == 0)
+                {
+                    continue;
+                }
+                Cell previous = path[i - 1];
+
+                string direction = previous.Up == c ? "Up" : previous.Right == c ? "Right" : previous.Down == c ? "Down" : "Left";
+
+                bool b;
+                switch (direction)
+                {
+                    case "Up":
+                        b = path[i].Up == next;
+                        break;
+                    case "Right":
+                        b = path[i].Right == next;
+                        break;
+                    case "Down":
+                        b = path[i].Down == next;
+                        break;
+                    default:
+                        b = path[i].Left == next;
+                        break;
+                }
+
+                if (!b)
+                {
+                    return false;
+                }
+            }
         }
 
         return true;

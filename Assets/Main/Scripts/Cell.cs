@@ -50,6 +50,20 @@ public class Cell  {
         }
     }
 
+    public Cell(int row, int col, KMSelectable button, Material m)
+    {
+        materials = new Material[] { redMaterial, orangeMaterial, greenMaterial, blueMaterial, purpleMaterial, pinkMaterial };
+        Row = row;
+        Col = col;
+        Button = button;
+
+        if (button != null)
+        {
+            Mesh = button.GetComponent<MeshRenderer>();
+            SetMaterial(m);
+        }
+    }
+
     private void SetTileColor(Material m)
     {
         if (SameColor(m.color, redColor))
