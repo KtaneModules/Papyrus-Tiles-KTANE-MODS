@@ -31,10 +31,17 @@ public class Main : MonoBehaviour
 
     Smell currentSmell;
 
+    bool recursionAtGoal;
+
+    List<string> recursionDirections;
+
     static int ModuleIdCounter = 1;
     int ModuleId;
     private bool ModuleSolved;
     bool debug = true;
+    private Cell recursionCurrentCell;
+    private List<Cell> recursionCellList;
+
 
     void Awake()
     {
@@ -150,7 +157,7 @@ public class Main : MonoBehaviour
             }
         }
 
-        answer = FindPathAStar(grid[2, 0], grid[2, 7]);
+        FindPathRecursion(grid[2, 0], grid[2, 7]);
 
         if (answer == null)
         {
@@ -577,6 +584,311 @@ public class Main : MonoBehaviour
         }
 
         return null;
+    }
+
+    void FindPathRecursion(Cell start, Cell end)
+    {
+        recursionDirections = new List<string>();
+        recursionCellList = new List<Cell>();
+        foreach (Cell c in grid)
+        {
+            c.Visited = false;
+            c.Valid = true;
+        }
+
+        recursionCurrentCell = start;
+        recursionCellList.Add(start);
+
+        if (MoveNorth(end) || MoveEast(end) || MoveSouth(end) || MoveWest(end))
+        {
+            Debug.Log("Path found: " + LogList(recursionCellList));
+        }
+
+    }
+
+    bool MoveNorth(Cell end)
+    {
+        //if we can move up, and we didnt move done before, go up
+        Cell next = recursionCurrentCell.Up;
+        bool validPathMovingNorth = true;
+        if (next != null && (recursionDirections.Count == 0 || recursionDirections.Last() != "DOWN") && next.Valid)
+        {
+            recursionCurrentCell = recursionCurrentCell.Up;
+            recursionDirections.Add("UP");
+            recursionCellList.Add(recursionCurrentCell);
+
+            //check to see if this is valid path so far
+            validPathMovingNorth = ValidPath(recursionCellList);
+        }
+
+        //if he player is at the goal, set goal as true
+        if (AtGoal(end))
+        {
+            recursionAtGoal = true;
+        }
+
+        else
+        {
+            //only continue to go up if path is valid
+            if (validPathMovingNorth)
+            {
+                recursionAtGoal = MoveNorth(end);
+
+                //if movig north doesn't work, move east
+                if (!recursionAtGoal)
+                {
+                    recursionAtGoal = MoveEast(end);
+
+                    //if moving east doesn't work, move south
+                    if (!recursionAtGoal)
+                    {
+                        recursionAtGoal = MoveSouth(end);
+
+                        //if moving south doesn't work, move west
+                        if (!recursionAtGoal)
+                        {
+                            recursionAtGoal = MoveWest(end);
+
+                            //if moving west doesn't work, mark this position as
+                            //unavailable and move back south
+                            if (!recursionAtGoal)
+                            {
+                                recursionCurrentCell.Valid = false;
+                                recursionCurrentCell = recursionCurrentCell.Down;
+                                recursionDirections.Remove(recursionDirections.Last());
+                                recursionCellList.Remove(recursionCellList.Last());
+                            }
+                        }
+                    }
+                }
+            }
+
+            //otherwise, go back down and say you couldnt go north
+            else
+            {
+                recursionAtGoal = false;
+                recursionCurrentCell = recursionCurrentCell.Down;
+                recursionDirections.Remove(recursionDirections.Last());
+                recursionCellList.Remove(recursionCellList.Last());
+            }
+        }
+
+        return recursionAtGoal;
+    }
+
+    bool MoveEast(Cell end)
+    {
+        //if we can move east, and we didnt move west before, go east
+        Cell next = recursionCurrentCell.Up;
+        bool validPathMovingEast = true;
+        if (next != null && (recursionDirections.Count == 0 || recursionDirections.Last() != "LEFT") && next.Valid)
+        {
+            recursionCurrentCell = recursionCurrentCell.Right;
+            recursionDirections.Add("RIGHT");
+            recursionCellList.Add(recursionCurrentCell);
+
+            //check to see if this is valid path so far
+            validPathMovingEast = ValidPath(recursionCellList);
+        }
+
+        //if he player is at the goal, set goal as true
+        if (AtGoal(end))
+        {
+            recursionAtGoal = true;
+        }
+
+        else
+        {
+            //only continue to go east if path is valid
+            if (validPathMovingEast)
+            {
+                recursionAtGoal = MoveEast(end);
+
+                //if movig east doesn't work, move south
+                if (!recursionAtGoal)
+                {
+                    recursionAtGoal = MoveSouth(end);
+
+                    //if moving south doesn't work, move west
+                    if (!recursionAtGoal)
+                    {
+                        recursionAtGoal = MoveWest(end);
+
+                        //if moving west doesn't work, move north
+                        if (!recursionAtGoal)
+                        {
+                            recursionAtGoal = MoveNorth(end);
+
+                            //if moving east doesn't work, mark this position as
+                            //unavailable and move back west
+                            if (!recursionAtGoal)
+                            {
+                                recursionCurrentCell.Valid = false;
+                                recursionCurrentCell = recursionCurrentCell.Left;
+                                recursionDirections.Remove(recursionDirections.Last());
+                                recursionCellList.Remove(recursionCellList.Last());
+                            }
+                        }
+                    }
+                }
+            }
+
+            //otherwise, go back weast and say you couldnt go east
+            else
+            {
+                recursionAtGoal = false;
+                recursionCurrentCell = recursionCurrentCell.Left;
+                recursionDirections.Remove(recursionDirections.Last());
+                recursionCellList.Remove(recursionCellList.Last());
+            }
+        }
+
+        return recursionAtGoal;
+    }
+
+    bool MoveSouth(Cell end)
+    {
+        //if we can move south, and we didnt move north before, go south
+        Cell next = recursionCurrentCell.Down;
+        bool validPathMovingSouth = true;
+        if (next != null && (recursionDirections.Count == 0 || recursionDirections.Last() != "UP") && next.Valid)
+        {
+            recursionCurrentCell = recursionCurrentCell.Down;
+            recursionDirections.Add("DOWN");
+            recursionCellList.Add(recursionCurrentCell);
+
+            //check to see if this is valid path so far
+            validPathMovingSouth = ValidPath(recursionCellList);
+        }
+
+        //if he player is at the goal, set goal as true
+        if (AtGoal(end))
+        {
+            recursionAtGoal = true;
+        }
+
+        else
+        {
+            //only continue to go south if path is valid
+            if (validPathMovingSouth)
+            {
+                recursionAtGoal = MoveSouth(end);
+
+                //if movig south doesn't work, move west
+                if (!recursionAtGoal)
+                {
+                    recursionAtGoal = MoveWest(end);
+
+                    //if moving west doesn't work, move north
+                    if (!recursionAtGoal)
+                    {
+                        recursionAtGoal = MoveNorth(end);
+
+                        //if moving north doesn't work, move east
+                        if (!recursionAtGoal)
+                        {
+                            recursionAtGoal = MoveEast(end);
+
+                            //if moving east doesn't work, mark this position as
+                            //unavailable and move back north
+                            if (!recursionAtGoal)
+                            {
+                                recursionCurrentCell.Valid = false;
+                                recursionCurrentCell = recursionCurrentCell.Up;
+                                recursionDirections.Remove(recursionDirections.Last());
+                                recursionCellList.Remove(recursionCellList.Last());
+                            }
+                        }
+                    }
+                }
+            }
+
+            //otherwise, go back north and say you couldnt go south
+            else
+            {
+                recursionAtGoal = false;
+                recursionCurrentCell = recursionCurrentCell.Up;
+                recursionDirections.Remove(recursionDirections.Last());
+                recursionCellList.Remove(recursionCellList.Last());
+            }
+        }
+
+        return recursionAtGoal;
+    }
+
+    bool MoveWest(Cell end)
+    {
+        //if we can move west, and we didnt move east before, go west
+        Cell next = recursionCurrentCell.Left;
+        bool validPathMovingWest = true;
+        if (next != null && (recursionDirections.Count == 0 || recursionDirections.Last() != "RIGHT") && next.Valid)
+        {
+            recursionCurrentCell = recursionCurrentCell.Left;
+            recursionDirections.Add("LEFT");
+            recursionCellList.Add(recursionCurrentCell);
+
+            //check to see if this is valid path so far
+            validPathMovingWest = ValidPath(recursionCellList);
+        }
+
+        //if he player is at the goal, set goal as true
+        if (AtGoal(end))
+        {
+            recursionAtGoal = true;
+        }
+
+        else
+        {
+            //only continue to go west if path is valid
+            if (validPathMovingWest)
+            {
+                recursionAtGoal = MoveWest(end);
+
+                //if movig west doesn't work, move north
+                if (!recursionAtGoal)
+                {
+                    recursionAtGoal = MoveNorth(end);
+
+                    //if moving north doesn't work, move east
+                    if (!recursionAtGoal)
+                    {
+                        recursionAtGoal = MoveEast(end);
+
+                        //if moving east doesn't work, move south
+                        if (!recursionAtGoal)
+                        {
+                            recursionAtGoal = MoveEast(end);
+
+                            //if moving south doesn't work, mark this position as
+                            //unavailable and move back east
+                            if (!recursionAtGoal)
+                            {
+                                recursionCurrentCell.Valid = false;
+                                recursionCurrentCell = recursionCurrentCell.Right;
+                                recursionDirections.Remove(recursionDirections.Last());
+                                recursionCellList.Remove(recursionCellList.Last());
+                            }
+                        }
+                    }
+                }
+            }
+
+            //otherwise, go back down and say you couldnt go east
+            else
+            {
+                recursionAtGoal = false;
+                recursionCurrentCell = recursionCurrentCell.Right;
+                recursionDirections.Remove(recursionDirections.Last());
+                recursionCellList.Remove(recursionCellList.Last());
+            }
+        }
+
+        return recursionAtGoal;
+    }
+
+    bool AtGoal(Cell end)
+    {
+        return recursionCellList.Contains(end);
     }
 
     private string LogList(List<Cell> list)

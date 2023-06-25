@@ -9,6 +9,7 @@ public class Cell  {
     public int Heuristic { get; set; }
     public int FinalCost { get; set; }
     public int G { get; set; }
+    public bool Valid { get; set; }
 
     public KMSelectable Button { get; private set; }
     public Tile Tile { get; private set; }
