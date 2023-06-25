@@ -51,15 +51,6 @@ public class Main : MonoBehaviour
         Cell.purpleMaterial = materials[4];
         Cell.pinkMaterial = materials[5];
 
-        Cell.redColor = Cell.redMaterial.color;
-        Cell.orangeColor = Cell.orangeMaterial.color;
-        Cell.greenColor = Cell.greenMaterial.color;
-        Cell.blueColor = Cell.blueMaterial.color;
-        Cell.purpleColor = Cell.purpleMaterial.color;
-        Cell.pinkColor = Cell.pinkMaterial.color;
-
-
-
         grid = new Cell[6, 8];
         if (!debug)
         {
@@ -138,15 +129,14 @@ public class Main : MonoBehaviour
 
     void GenereatDebugMaze()
     {
-        Material[,] grid1 = new Material[,]
+        int[,] grid1 = new int[,]
         {
-            { materials[2], materials[5], materials[0], materials[1], materials[0], materials[3], materials[0], materials[3]},
-            { materials[5], materials[1], materials[4], materials[4], materials[4], materials[4], materials[3], materials[2]},
-            { materials[5], materials[2], materials[2], materials[5], materials[5], materials[1], materials[2], materials[2]},
-            { materials[0], materials[3], materials[1], materials[3], materials[4], materials[4], materials[0], materials[5]},
-            { materials[0], materials[1], materials[4], materials[3], materials[2], materials[3], materials[1], materials[3]},
-            { materials[0], materials[2], materials[1], materials[1], materials[5], materials[5], materials[2], materials[0]},
-
+            { 2, 5, 0, 1, 0, 3, 0, 3},
+            { 5, 1, 4, 4, 4, 4, 3, 2},
+            { 5, 2, 2, 5, 5, 1, 2, 2},
+            { 0, 3, 1, 3, 4, 4, 0, 5},
+            { 0, 1, 4, 3, 2, 3, 1, 3},
+            { 0, 2, 1, 1, 5, 5, 2, 0},
         };
 
         for (int row = 0; row < 6; row++)
@@ -154,13 +144,13 @@ public class Main : MonoBehaviour
             for (int col = 0; col < 8; col++)
             {
                 int index = row * 8 + col;
-                grid[row, col] = new Cell(row, col, buttons[index], grid1[row, col]);
+                grid[row, col] = new Cell(row, col, buttons[index], (Tile)grid1[row, col]);
 
                 buttons[index].OnInteract += delegate () { KeypadPress(buttons[index]); return false; };
             }
         }
 
-        answer = FindPath(grid[2, 0], grid[2, 7]);
+        answer = FindPathAStar(grid[2, 0], grid[2, 7]);
 
         if (answer == null)
         {
@@ -195,13 +185,7 @@ public class Main : MonoBehaviour
                 Cell start = startingCells[startIndex];
                 Cell end = endingCells[endIndex];
 
-                answer = FindPath(start, end);
-
-
-                if (answer != null && !ValidPath(answer))
-                {
-                    answer = null;
-                }
+                answer = FindPathAStar(start, end);
 
                 if (answer != null)
                 {
@@ -292,7 +276,7 @@ public class Main : MonoBehaviour
         }
     }
 
-    List<Cell> FindPath(Cell start, Cell end)
+    List<Cell> FindPathBFS(Cell start, Cell end)
     {
         Debug.Log($"Start at {start}. End at {end}");
 
@@ -325,7 +309,7 @@ public class Main : MonoBehaviour
 
             List<Cell> neighbors = new List<Cell> { next.Up, next.Left, next.Down, next.Right };
 
-            neighbors = GetRidOfBadNeighbors(neighbors, next, q);
+            neighbors = GetRidOfBadNeighborsBFS(neighbors, next, q);
 
             foreach (Cell c in neighbors)
             {
@@ -374,10 +358,122 @@ public class Main : MonoBehaviour
             tempPath.Add(relMovements[i].end);
         }
 
-        Debug.Log(LogList(tempPath));
+        if (ValidPath(tempPath))
+        {
+            return tempPath;
+        }
 
-        return tempPath;
+        return null;
 
+    }
+
+    List<Cell> FindPathAStar(Cell start, Cell end)
+    {
+        Debug.Log($"Start at {start}. End at {end}.");
+        SetHeristic(end);
+
+        List<Cell> open = new List<Cell>();
+        List<Cell> closed = new List<Cell>();
+
+        start.G = 0;
+
+        Cell currentCell = start;
+
+        int count = 0;
+
+        while (!open.Contains(end)) //change to when end is reached
+        {
+            count++;
+
+            if (count == 100)
+            {
+                Debug.Log("An infiinte loop has occured");
+                break;
+            }
+
+            //Debug.Log("Current cell is " + currentCell.ToString());
+
+            List<Cell> neighbors = new List<Cell>();
+
+            neighbors.Add(currentCell.Up);
+            neighbors.Add(currentCell.Left);
+            neighbors.Add(currentCell.Down);
+            neighbors.Add(currentCell.Right);
+
+
+            //Debug.Log("BEFORE neighbors are " + string.Join(" ", neighbors.Select(x => x == null ? "poop" : x.ToString()).ToArray()));
+
+            neighbors = GetRidOfBadNeighborsAStar(neighbors, closed, currentCell);
+
+            //Debug.Log("neighbors are " + string.Join(" ", neighbors.Select(x => ($"{x.ToString()} F={x.FinalCost}")).ToArray()));
+
+            foreach (Cell c in neighbors)
+            {
+                if (!open.Contains(c))
+                {
+                    c.Parent = currentCell;
+                    open.Add(c);
+                    c.G = c.Parent.G + 1;
+                    c.FinalCost = c.G + c.Heuristic;
+                }
+
+                else
+                {
+                    int potentialCost = c.Parent.G + 1;
+                    if (c.FinalCost > potentialCost)
+                    {
+                        c.Parent = currentCell;
+                        c.G = potentialCost;
+                        c.FinalCost = c.G + c.Heuristic;
+                    }
+                }
+            }
+
+            open.Remove(currentCell);
+            closed.Add(currentCell);
+
+            if (open.Count == 0) //there is no path to end
+            {
+                return null;
+            }
+            open = open.OrderBy(x => x.FinalCost).ToList();
+            currentCell = open.First();
+            //Debug.Log("Cells in open list " + string.Join(" ", open.Select(x => ($"{x.ToString()} F={x.FinalCost}")).ToArray()));
+            neighbors.Clear();
+        }
+
+        if (!open.Contains(end))
+        {
+            return null;
+        }
+
+        List<Cell> path = new List<Cell>();
+
+        Cell current = end;
+        while (!path.Contains(start))
+        {
+            path.Add(current);
+            current = current.Parent;
+        }
+        path.Reverse();
+
+        if (ValidPath(path))
+        {
+            return path;
+        }
+
+        return null;
+    }
+
+    void SetHeristic(Cell end)
+    {
+        foreach (Cell c in grid)
+        {
+            c.Heuristic = Math.Abs(end.Row - c.Row) + Math.Abs(end.Col - c.Col);
+            c.Parent = null;
+            c.FinalCost = 0;
+            c.G = 0;
+        }
     }
 
     void RegenerateCell(Cell c)
@@ -388,7 +484,7 @@ public class Main : MonoBehaviour
         }
     }
 
-    List<Cell> GetRidOfBadNeighbors(List<Cell> list, Cell current, Queue<Cell> q)
+    List<Cell> GetRidOfBadNeighborsBFS(List<Cell> list, Cell current, Queue<Cell> q)
     {
 
         //we are not checking for smells becaue that's hard
@@ -434,6 +530,55 @@ public class Main : MonoBehaviour
         return newList;
     }
 
+
+
+    List<Cell> GetRidOfBadNeighborsAStar(List<Cell> list, List<Cell> closed, Cell current)
+    {
+        List<Cell> newList = new List<Cell>();
+
+        foreach (Cell c in list)
+        {
+            //tile cant be null
+            if (c == null)
+            {
+                continue;
+            }
+
+            //tile cant be already visted
+            if (closed.Contains(c))
+            {
+                continue;
+            }
+
+            //tile cant be red
+            if (c.Tile.ToString() == "Red")
+            {
+                continue;
+            }
+
+            //if it's purple, check next cell:
+            if (c.Tile.ToString() == "Purple")
+            {
+                Cell next = current.Up == c ? c.Up : current.Right == c ? c.Right : current.Down == c ? c.Down : c.Left;
+
+                //if next cell is red it's not safe
+                if (next.Tile.ToString() == "Red")
+                {
+                    continue;
+                }
+            }
+
+            newList.Add(c);
+        }
+
+        if (ValidPath(newList))
+        {
+            return newList;
+        }
+
+        return null;
+    }
+
     private string LogList(List<Cell> list)
     {
         return string.Join(" ", list.Select(x => x.ToString()).ToArray());
@@ -442,7 +587,6 @@ public class Main : MonoBehaviour
     bool ValidPath(List<Cell> path)
     {
         Smell smell = Smell.None;
-
 
         for (int i = 0; i < path.Count; i++)
         {
@@ -462,7 +606,7 @@ public class Main : MonoBehaviour
             {
                 Cell next = path[i + 1];
 
-                if (smell == Smell.Orange && c.GetColor() == "Blue")
+                if (smell == Smell.Orange && next.GetColor() == "Blue")
                 {
                     return false;
                 }
@@ -473,27 +617,9 @@ public class Main : MonoBehaviour
                     continue;
                 }
                 Cell previous = path[i - 1];
+                Cell actualNext = previous.Up == c ? c.Up : previous.Right == c ? c.Right : previous.Down == c ? c.Down : c.Left;
 
-                string direction = previous.Up == c ? "Up" : previous.Right == c ? "Right" : previous.Down == c ? "Down" : "Left";
-
-                bool b;
-                switch (direction)
-                {
-                    case "Up":
-                        b = path[i].Up == next;
-                        break;
-                    case "Right":
-                        b = path[i].Right == next;
-                        break;
-                    case "Down":
-                        b = path[i].Down == next;
-                        break;
-                    default:
-                        b = path[i].Left == next;
-                        break;
-                }
-
-                if (!b)
+                if (actualNext == next)
                 {
                     return false;
                 }

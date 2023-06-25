@@ -6,6 +6,10 @@ using Rnd = UnityEngine.Random;
 public class Cell  {
     public int Row { get; private set; }
     public int Col { get; private set; }
+    public int Heuristic { get; set; }
+    public int FinalCost { get; set; }
+    public int G { get; set; }
+
     public KMSelectable Button { get; private set; }
     public Tile Tile { get; private set; }
 
@@ -16,17 +20,7 @@ public class Cell  {
     public static Material purpleMaterial { get; set; }
     public static Material pinkMaterial { get; set; }
 
-    public static Color redColor { get; set; }
-    public static Color orangeColor { get; set; }
-    public static Color greenColor { get; set; }
-    public static Color blueColor { get; set; }
-    public static Color purpleColor { get; set; }
-    public static Color pinkColor { get; set; }
-
     private const float epsilon = 0.0001f;
-
-
-    private Material[] materials;
 
     public MeshRenderer Mesh { get; private set; }
 
@@ -39,7 +33,6 @@ public class Cell  {
 
     public Cell(int row, int col, KMSelectable button)
     {
-        materials = new Material[] {redMaterial, orangeMaterial, greenMaterial, blueMaterial, purpleMaterial, pinkMaterial };
         Row = row;
         Col = col;
         Button = button;
@@ -50,9 +43,8 @@ public class Cell  {
         }
     }
 
-    public Cell(int row, int col, KMSelectable button, Material m)
+    public Cell(int row, int col, KMSelectable button, Tile t)
     {
-        materials = new Material[] { redMaterial, orangeMaterial, greenMaterial, blueMaterial, purpleMaterial, pinkMaterial };
         Row = row;
         Col = col;
         Button = button;
@@ -60,56 +52,44 @@ public class Cell  {
         if (button != null)
         {
             Mesh = button.GetComponent<MeshRenderer>();
-            SetMaterial(m);
+            SetTile(t);
         }
     }
 
-    private void SetTileColor(Material m)
+    private void SetTile(Tile t)
     {
-        if (SameColor(m.color, redColor))
-        {
-            Tile = Tile.Red;
-        }
-
-        else if (SameColor(m.color, orangeColor))
-        {
-            Tile = Tile.Orange;
-        }
-
-
-        else if(SameColor(m.color, greenColor))
-        {
-            Tile = Tile.Green;
-        }
-
-
-        else if(SameColor(m.color, blueColor))
-        {
-            Tile = Tile.Blue;
-        }
-
-
-        else if(SameColor(m.color, purpleColor))
-        {
-            Tile = Tile.Purple;
-        }
-
-        else
-        {
-            Tile = Tile.Pink;
-        }
-
+        Tile = t;
+        SetMaterial(t);
     }
 
-    public void SetMaterial(Material m)
+    public void SetMaterial(Tile t)
     {
-        Mesh.sharedMaterial = m;
-        SetTileColor(m);
+        switch (t)
+        {
+            case Tile.Pink:
+                Mesh.sharedMaterial = pinkMaterial;
+                break;
+            case Tile.Red:
+                Mesh.sharedMaterial = redMaterial;
+                break;
+            case Tile.Orange:
+                Mesh.sharedMaterial = orangeMaterial;
+                break;
+            case Tile.Purple:
+                Mesh.sharedMaterial = purpleMaterial;
+                break;
+            case Tile.Green:
+                Mesh.sharedMaterial = greenMaterial;
+                break;
+            case Tile.Blue:
+                Mesh.sharedMaterial = blueMaterial;
+                break;
+        }
     }
 
     public void SetRandomMaterial()
     {
-        SetMaterial(materials[Rnd.Range(0, materials.Length)]);
+        SetMaterial((Tile)Rnd.Range(0, 6));
     }
 
     public override string ToString()

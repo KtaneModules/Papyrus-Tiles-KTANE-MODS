@@ -11,10 +11,10 @@ public enum Smell
 
 public enum Tile
 {
-    Pink,
     Red,
     Orange,
-    Purple,
     Green,
-    Blue
+    Blue,
+    Purple,
+    Pink,
 }
