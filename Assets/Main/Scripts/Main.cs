@@ -32,6 +32,8 @@ public class Main : MonoBehaviour
     bool recursionAtGoal;
     private Cell recursionCurrentCell;
     private List<Cell> recursionCellList;
+    private List<Cell> recursionCellListSimplified;
+
     List<string> recursionDirections;
     Cell endCell;
 
@@ -259,9 +261,12 @@ public class Main : MonoBehaviour
 
         if (foundPath)
         {
+            recursionCellListSimplified = SimplifyAnswer(recursionCellList);
             Debug.Log("Final Answer: " + LogList(recursionCellList));
-
+            Debug.Log("Final Answer (Simplified): " + LogList(recursionCellListSimplified));
+            Debug.Log($"{(recursionCellListSimplified.Count == recursionCellList.Count ? "Lists are the same" : "Lists are different")}");
         }
+
         else
         {
             Debug.Log("Couldn't find a path to complete this maze");
@@ -696,6 +701,37 @@ public class Main : MonoBehaviour
         }
 
         return true;
+    }
+
+    List<Cell> SimplifyAnswer(List<Cell> list)
+    {
+        List<Cell> newList = new List<Cell>();
+
+        for (int i = 0; i < list.Count; i++)
+        {
+            Cell current = list[i];
+            Cell previous = null;
+
+            if (i != 0)
+            {
+                previous = list[i - 1];
+            }
+
+            newList.Add(current);
+
+            if (previous != null && previous.GetColor() == "Purple")
+            {
+                newList.Remove(newList.Last());
+            }
+
+            if (newList.Any(x => x.Col == 7))
+            {
+                break;
+            }
+
+        }
+
+        return newList;
     }
 
     void SetNeighbors()
