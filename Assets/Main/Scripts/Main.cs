@@ -35,7 +35,6 @@ public class Main : MonoBehaviour
     private List<Cell> recursionCellListSimplified;
 
     List<string> recursionDirections;
-    Cell endCell;
 
     static int ModuleIdCounter = 1;
     int ModuleId;
