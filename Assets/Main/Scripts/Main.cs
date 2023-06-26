@@ -27,20 +27,18 @@ public class Main : MonoBehaviour
     [SerializeField]
     GameObject lemon;
 
-    List<Cell> answer;
-
     Smell currentSmell;
 
     bool recursionAtGoal;
-
+    private Cell recursionCurrentCell;
+    private List<Cell> recursionCellList;
     List<string> recursionDirections;
 
     static int ModuleIdCounter = 1;
     int ModuleId;
     private bool ModuleSolved;
     bool debug = true;
-    private Cell recursionCurrentCell;
-    private List<Cell> recursionCellList;
+
 
 
     void Awake()
@@ -91,7 +89,7 @@ public class Main : MonoBehaviour
 
         else
         {
-            GenereatDebugMaze();
+            GenerateDebugMaze();
             SetNeighbors();
         }
 
@@ -110,8 +108,6 @@ public class Main : MonoBehaviour
 
     bool GenerateMaze()
     {
-        answer = null;
-
         //dont have purple spawn on edges
 
         foreach (Cell c in grid)
@@ -134,16 +130,56 @@ public class Main : MonoBehaviour
         return GetThroughMaze();
     }
 
-    void GenereatDebugMaze()
+    void GenerateDebugMaze()
     {
         int[,] grid1 = new int[,]
-        {
+           {
             { 2, 5, 0, 1, 0, 3, 0, 3},
             { 5, 1, 4, 4, 4, 4, 3, 2},
             { 5, 2, 2, 5, 5, 1, 2, 2},
             { 0, 3, 1, 3, 4, 4, 0, 5},
             { 0, 1, 4, 3, 2, 3, 1, 3},
             { 0, 2, 1, 1, 5, 5, 2, 0},
+           };
+
+        int[,] grid2 = new int[,]
+        {
+            { 0, 3, 3, 0, 3, 2, 3, 5},
+            {1, 5, 5, 5, 3, 0, 2, 1},
+            { 0, 0, 2, 2, 4, 2, 3, 5},
+            { 0, 2, 2, 1, 1, 3, 2, 0},
+            { 3, 3, 1, 5, 4, 3, 4, 1},
+            { 1, 1, 2, 1, 2, 0, 1, 2},
+        };
+
+        int[,] grid3 = new int[,]
+        {
+            { 1, 0, 0, 1, 3, 0, 5, 2},
+            { 1, 4, 3, 3, 1, 5, 4, 3},
+            { 2, 3, 1, 0, 2, 4, 0, 1},
+            { 0, 5, 4, 4, 0, 1, 0, 2},
+            { 5, 2, 3, 1, 0, 5, 2, 5},
+            { 0, 5, 2, 2, 1, 1, 2, 4},
+        };
+
+        int[,] grid4 = new int[,]
+        {
+            { 3, 0, 1, 5, 0, 1, 1, 3},
+            { 1, 4, 5, 3, 4, 4, 1, 2},
+            { 5, 1, 4, 2, 2, 2, 2, 3},
+            { 3, 0, 3, 4, 0, 2, 4, 5},
+            { 2, 3, 0, 2, 2, 2, 4, 3},
+            { 2, 3, 0, 1, 1, 2, 1, 5},
+        };
+
+        int[,] grid5 = new int[,]
+        {
+            { 1, 1, 1, 5, 1, 5, 0, 3},
+            { 5, 2, 1, 3, 1, 4, 2, 0},
+            { 3, 3, 1, 1, 2, 4, 4, 3},
+            { 1, 1, 5, 2, 0, 3, 3, 2},
+            { 3, 0, 0, 1, 4, 0, 4, 5},
+            { 3, 5, 2, 0, 3, 3, 2, 3},
         };
 
         for (int row = 0; row < 6; row++)
@@ -157,14 +193,7 @@ public class Main : MonoBehaviour
             }
         }
 
-        FindPathRecursion(grid[2, 0], grid[2, 7]);
-
-        if (answer == null)
-        {
-            Debug.Log("Could not find path from (2 0), (2, 7)");
-        }
-
-        //GetThroughMaze();
+        GetThroughMaze();
     }
 
     bool GetThroughMaze()
@@ -185,6 +214,7 @@ public class Main : MonoBehaviour
             }
         }
 
+        bool foundPath = false;
         for (int startIndex = 0; startIndex < startingCells.Count; startIndex++)
         {
             for (int endIndex = 0; endIndex < endingCells.Count; endIndex++)
@@ -192,30 +222,26 @@ public class Main : MonoBehaviour
                 Cell start = startingCells[startIndex];
                 Cell end = endingCells[endIndex];
 
-                answer = FindPathAStar(start, end);
+                foundPath = FindPathRecursion(start, end);
 
-                if (answer != null)
+                if (AtGoal(end))
                 {
                     break;
                 }
             }
 
-            if (answer != null)
+            if (foundPath)
             {
                 break;
             }
         }
 
-        if (answer == null)
+        if (foundPath)
         {
-            Debug.Log("L Bozo");
-        }
-        else
-        {
-            Debug.Log("Final Answer: " + LogList(answer));
+            Debug.Log("Final Answer: " + LogList(recursionCellList));
         }
 
-        return answer != null;
+        return foundPath;
     }
 
     void SetNeighbors()
@@ -283,206 +309,6 @@ public class Main : MonoBehaviour
         }
     }
 
-    List<Cell> FindPathBFS(Cell start, Cell end)
-    {
-        Debug.Log($"Start at {start}. End at {end}");
-
-        foreach (Cell c in grid)
-        {
-            c.Visited = false;
-        }
-
-        const int limit = 1000;
-        List<Cell> path = new List<Cell>();
-        List<Movement> allMoves = new List<Movement>();
-
-        Queue<Cell> q = new Queue<Cell>();
-
-        q.Enqueue(start);
-
-        
-        int count = 0;
-
-        while (q.Count != 0 && count < limit)
-        {
-            Cell next = q.Dequeue();
-            next.Visited = true;
-
-            if (next == end)
-            {
-                Debug.Log("Path to end was found");
-                break;
-            }
-
-            List<Cell> neighbors = new List<Cell> { next.Up, next.Left, next.Down, next.Right };
-
-            neighbors = GetRidOfBadNeighborsBFS(neighbors, next, q);
-
-            foreach (Cell c in neighbors)
-            {
-                q.Enqueue(c);
-                allMoves.Add(new Movement(next,c));
-            }
-
-            LogList(neighbors);
-
-            count++;
-        }
-
-        if (count == limit)
-        {
-            Debug.Log("Infinite loop has been found");
-            return null;
-        }
-
-        //start at end and work backwards to start
-        Movement lastMove;
-
-        try
-        {
-            Debug.Log("All moves count: " + allMoves.Count);
-            lastMove = allMoves.First(x => x.end == end);
-        }
-
-        catch
-        {
-            Debug.Log("First move to the end can't be found");
-            return null;
-        }
-
-        List<Movement> relMovements = new List<Movement>() { lastMove };
-
-        while (lastMove.start != start)
-        {
-            lastMove = allMoves.First(x => x.end == lastMove.start);
-            relMovements.Add(lastMove);
-        }
-
-        List<Cell> tempPath = new List<Cell>() { start };
-
-        for (int i = relMovements.Count - 1; i > -1; i--)
-        {
-            tempPath.Add(relMovements[i].end);
-        }
-
-        if (ValidPath(tempPath))
-        {
-            return tempPath;
-        }
-
-        return null;
-
-    }
-
-    List<Cell> FindPathAStar(Cell start, Cell end)
-    {
-        Debug.Log($"Start at {start}. End at {end}.");
-        SetHeristic(end);
-
-        List<Cell> open = new List<Cell>();
-        List<Cell> closed = new List<Cell>();
-
-        start.G = 0;
-
-        Cell currentCell = start;
-
-        int count = 0;
-
-        while (!open.Contains(end)) //change to when end is reached
-        {
-            count++;
-
-            if (count == 100)
-            {
-                Debug.Log("An infiinte loop has occured");
-                break;
-            }
-
-            //Debug.Log("Current cell is " + currentCell.ToString());
-
-            List<Cell> neighbors = new List<Cell>();
-
-            neighbors.Add(currentCell.Up);
-            neighbors.Add(currentCell.Left);
-            neighbors.Add(currentCell.Down);
-            neighbors.Add(currentCell.Right);
-
-
-            //Debug.Log("BEFORE neighbors are " + string.Join(" ", neighbors.Select(x => x == null ? "poop" : x.ToString()).ToArray()));
-
-            neighbors = GetRidOfBadNeighborsAStar(neighbors, closed, currentCell);
-
-            //Debug.Log("neighbors are " + string.Join(" ", neighbors.Select(x => ($"{x.ToString()} F={x.FinalCost}")).ToArray()));
-
-            foreach (Cell c in neighbors)
-            {
-                if (!open.Contains(c))
-                {
-                    c.Parent = currentCell;
-                    open.Add(c);
-                    c.G = c.Parent.G + 1;
-                    c.FinalCost = c.G + c.Heuristic;
-                }
-
-                else
-                {
-                    int potentialCost = c.Parent.G + 1;
-                    if (c.FinalCost > potentialCost)
-                    {
-                        c.Parent = currentCell;
-                        c.G = potentialCost;
-                        c.FinalCost = c.G + c.Heuristic;
-                    }
-                }
-            }
-
-            open.Remove(currentCell);
-            closed.Add(currentCell);
-
-            if (open.Count == 0) //there is no path to end
-            {
-                return null;
-            }
-            open = open.OrderBy(x => x.FinalCost).ToList();
-            currentCell = open.First();
-            //Debug.Log("Cells in open list " + string.Join(" ", open.Select(x => ($"{x.ToString()} F={x.FinalCost}")).ToArray()));
-            neighbors.Clear();
-        }
-
-        if (!open.Contains(end))
-        {
-            return null;
-        }
-
-        List<Cell> path = new List<Cell>();
-
-        Cell current = end;
-        while (!path.Contains(start))
-        {
-            path.Add(current);
-            current = current.Parent;
-        }
-        path.Reverse();
-
-        if (ValidPath(path))
-        {
-            return path;
-        }
-
-        return null;
-    }
-
-    void SetHeristic(Cell end)
-    {
-        foreach (Cell c in grid)
-        {
-            c.Heuristic = Math.Abs(end.Row - c.Row) + Math.Abs(end.Col - c.Col);
-            c.Parent = null;
-            c.FinalCost = 0;
-            c.G = 0;
-        }
-    }
-
     void RegenerateCell(Cell c)
     {
         while (c.Tile.ToString() == "Purple")
@@ -491,109 +317,14 @@ public class Main : MonoBehaviour
         }
     }
 
-    List<Cell> GetRidOfBadNeighborsBFS(List<Cell> list, Cell current, Queue<Cell> q)
-    {
-
-        //we are not checking for smells becaue that's hard
-
-        List<Cell> newList = new List<Cell>();
-
-        for (int i = 0; i < list.Count; i++)
-        {
-            Cell c = list[i];
-
-            //if it's null, ....yeah
-            if (c == null || c.Visited)
-            {
-                continue;
-            }
-
-            //if it's red it's not safe
-            if (c.Tile.ToString() == "Red")
-            {
-                continue;
-            }
-
-            //if it's in the queue and not purple dont add it
-            if (c.Tile.ToString() == "Purple" && q.Contains(c))
-            {
-                continue;
-            }
-
-            //if it's purple, check next cell:
-            if (c.Tile.ToString() == "Purple")
-            {
-                Cell next = current.Up == c ? c.Up : current.Right == c ? c.Right : current.Down == c ? c.Down : c.Left;
-
-                //-if next cell is red it's not safe
-                if (next.Tile.ToString() == "Red")
-                {
-                    continue;
-                }
-            }
-            newList.Add(c);
-        }
-
-        return newList;
-    }
-
-
-
-    List<Cell> GetRidOfBadNeighborsAStar(List<Cell> list, List<Cell> closed, Cell current)
-    {
-        List<Cell> newList = new List<Cell>();
-
-        foreach (Cell c in list)
-        {
-            //tile cant be null
-            if (c == null)
-            {
-                continue;
-            }
-
-            //tile cant be already visted
-            if (closed.Contains(c))
-            {
-                continue;
-            }
-
-            //tile cant be red
-            if (c.Tile.ToString() == "Red")
-            {
-                continue;
-            }
-
-            //if it's purple, check next cell:
-            if (c.Tile.ToString() == "Purple")
-            {
-                Cell next = current.Up == c ? c.Up : current.Right == c ? c.Right : current.Down == c ? c.Down : c.Left;
-
-                //if next cell is red it's not safe
-                if (next.Tile.ToString() == "Red")
-                {
-                    continue;
-                }
-            }
-
-            newList.Add(c);
-        }
-
-        if (ValidPath(newList))
-        {
-            return newList;
-        }
-
-        return null;
-    }
-
-    void FindPathRecursion(Cell start, Cell end)
+    bool FindPathRecursion(Cell start, Cell end)
     {
         recursionDirections = new List<string>();
         recursionCellList = new List<Cell>();
         foreach (Cell c in grid)
         {
             c.Visited = false;
-            c.Valid = true;
+            c.Valid = c.Tile != Tile.Red;
         }
 
         recursionCurrentCell = start;
@@ -601,7 +332,13 @@ public class Main : MonoBehaviour
 
         if (MoveNorth(end) || MoveEast(end) || MoveSouth(end) || MoveWest(end))
         {
-            Debug.Log("Path found: " + LogList(recursionCellList));
+            return true;
+        }
+
+        else
+        {
+            Console.WriteLine($"Could not find path from {start} to {end}");
+            return false;
         }
 
     }
@@ -609,20 +346,28 @@ public class Main : MonoBehaviour
     bool MoveNorth(Cell end)
     {
         //if we can move up, and we didnt move done before, go up
+
         Cell next = recursionCurrentCell.Up;
-        bool validPathMovingNorth = true;
-        if (next != null && (recursionDirections.Count == 0 || recursionDirections.Last() != "DOWN") && next.Valid)
+
+
+        Console.WriteLine($"Attempting to move up to {next}\n");
+
+        bool validPathMovingNorth = false;
+        bool checkValidity = false;
+        if (next != null && (recursionDirections.Count == 0 || recursionDirections.Last() != "DOWN") && next.Valid && UnvisitedNonPurpleCell(next))
         {
             recursionCurrentCell = recursionCurrentCell.Up;
             recursionDirections.Add("UP");
             recursionCellList.Add(recursionCurrentCell);
+            Console.WriteLine($"Now at {next}\n");
 
             //check to see if this is valid path so far
             validPathMovingNorth = ValidPath(recursionCellList);
+            checkValidity = true;
         }
 
         //if he player is at the goal, set goal as true
-        if (AtGoal(end))
+        if (AtGoal(end) && validPathMovingNorth)
         {
             recursionAtGoal = true;
         }
@@ -653,6 +398,7 @@ public class Main : MonoBehaviour
                             //unavailable and move back south
                             if (!recursionAtGoal)
                             {
+                                Console.WriteLine($"Up doesn't lead anywhere. Moving back down.\n");
                                 recursionCurrentCell.Valid = false;
                                 recursionCurrentCell = recursionCurrentCell.Down;
                                 recursionDirections.Remove(recursionDirections.Last());
@@ -666,10 +412,15 @@ public class Main : MonoBehaviour
             //otherwise, go back down and say you couldnt go north
             else
             {
-                recursionAtGoal = false;
-                recursionCurrentCell = recursionCurrentCell.Down;
-                recursionDirections.Remove(recursionDirections.Last());
-                recursionCellList.Remove(recursionCellList.Last());
+                if (checkValidity)
+                {
+                    recursionAtGoal = false;
+                    recursionCurrentCell = recursionCurrentCell.Down;
+                    recursionDirections.Remove(recursionDirections.Last());
+                    recursionCellList.Remove(recursionCellList.Last());
+                }
+
+                Console.WriteLine($"Moving up lead to an invalid path. Going back down to {recursionCurrentCell}\n");
             }
         }
 
@@ -679,20 +430,28 @@ public class Main : MonoBehaviour
     bool MoveEast(Cell end)
     {
         //if we can move east, and we didnt move west before, go east
-        Cell next = recursionCurrentCell.Up;
-        bool validPathMovingEast = true;
-        if (next != null && (recursionDirections.Count == 0 || recursionDirections.Last() != "LEFT") && next.Valid)
+        Cell next = recursionCurrentCell.Right;
+        Console.WriteLine($"Attempting to move right to {next}\n");
+
+
+        bool validPathMovingEast = false;
+        bool checkValidity = false;
+
+        if (next != null && (recursionDirections.Count == 0 || recursionDirections.Last() != "LEFT") && next.Valid && UnvisitedNonPurpleCell(next))
         {
             recursionCurrentCell = recursionCurrentCell.Right;
             recursionDirections.Add("RIGHT");
             recursionCellList.Add(recursionCurrentCell);
+            Console.WriteLine($"Now at {next}\n");
 
             //check to see if this is valid path so far
             validPathMovingEast = ValidPath(recursionCellList);
+            checkValidity = true;
+
         }
 
         //if he player is at the goal, set goal as true
-        if (AtGoal(end))
+        if (AtGoal(end) && validPathMovingEast)
         {
             recursionAtGoal = true;
         }
@@ -723,6 +482,7 @@ public class Main : MonoBehaviour
                             //unavailable and move back west
                             if (!recursionAtGoal)
                             {
+                                Console.WriteLine($"Right doesn't lead anywhere. Moving back Left.\n");
                                 recursionCurrentCell.Valid = false;
                                 recursionCurrentCell = recursionCurrentCell.Left;
                                 recursionDirections.Remove(recursionDirections.Last());
@@ -736,10 +496,15 @@ public class Main : MonoBehaviour
             //otherwise, go back weast and say you couldnt go east
             else
             {
-                recursionAtGoal = false;
-                recursionCurrentCell = recursionCurrentCell.Left;
-                recursionDirections.Remove(recursionDirections.Last());
-                recursionCellList.Remove(recursionCellList.Last());
+                if (checkValidity)
+                {
+                    recursionAtGoal = false;
+                    recursionCurrentCell = recursionCurrentCell.Left;
+                    recursionDirections.Remove(recursionDirections.Last());
+                    recursionCellList.Remove(recursionCellList.Last());
+                }
+
+                Console.WriteLine($"Moving right lead to an invalid path. Going back left to {recursionCurrentCell}\n");
             }
         }
 
@@ -750,19 +515,25 @@ public class Main : MonoBehaviour
     {
         //if we can move south, and we didnt move north before, go south
         Cell next = recursionCurrentCell.Down;
-        bool validPathMovingSouth = true;
-        if (next != null && (recursionDirections.Count == 0 || recursionDirections.Last() != "UP") && next.Valid)
+        Console.WriteLine($"Attempting to move down to {next}\n");
+        bool validPathMovingSouth = false;
+        bool checkValidity = false;
+
+
+        if (next != null && (recursionDirections.Count == 0 || recursionDirections.Last() != "UP") && next.Valid && UnvisitedNonPurpleCell(next))
         {
             recursionCurrentCell = recursionCurrentCell.Down;
             recursionDirections.Add("DOWN");
             recursionCellList.Add(recursionCurrentCell);
+            Console.WriteLine($"Now at {next}\n");
 
             //check to see if this is valid path so far
             validPathMovingSouth = ValidPath(recursionCellList);
+            checkValidity = true;
         }
 
         //if he player is at the goal, set goal as true
-        if (AtGoal(end))
+        if (AtGoal(end) && validPathMovingSouth)
         {
             recursionAtGoal = true;
         }
@@ -793,6 +564,7 @@ public class Main : MonoBehaviour
                             //unavailable and move back north
                             if (!recursionAtGoal)
                             {
+                                Console.WriteLine($"Down doesn't lead anywhere. Moving back up.\n");
                                 recursionCurrentCell.Valid = false;
                                 recursionCurrentCell = recursionCurrentCell.Up;
                                 recursionDirections.Remove(recursionDirections.Last());
@@ -806,10 +578,15 @@ public class Main : MonoBehaviour
             //otherwise, go back north and say you couldnt go south
             else
             {
-                recursionAtGoal = false;
-                recursionCurrentCell = recursionCurrentCell.Up;
-                recursionDirections.Remove(recursionDirections.Last());
-                recursionCellList.Remove(recursionCellList.Last());
+                if (checkValidity)
+                {
+                    recursionAtGoal = false;
+                    recursionCurrentCell = recursionCurrentCell.Up;
+                    recursionDirections.Remove(recursionDirections.Last());
+                    recursionCellList.Remove(recursionCellList.Last());
+                }
+
+                Console.WriteLine($"Moving down lead to an invalid path. Going back up to {recursionCurrentCell}\n");
             }
         }
 
@@ -820,19 +597,24 @@ public class Main : MonoBehaviour
     {
         //if we can move west, and we didnt move east before, go west
         Cell next = recursionCurrentCell.Left;
-        bool validPathMovingWest = true;
-        if (next != null && (recursionDirections.Count == 0 || recursionDirections.Last() != "RIGHT") && next.Valid)
+        Console.WriteLine($"Attempting to move left to {next}\n");
+        bool validPathMovingWest = false;
+        bool checkValidity = false;
+
+        if (next != null && (recursionDirections.Count == 0 || recursionDirections.Last() != "RIGHT") && next.Valid && UnvisitedNonPurpleCell(next))
         {
             recursionCurrentCell = recursionCurrentCell.Left;
             recursionDirections.Add("LEFT");
             recursionCellList.Add(recursionCurrentCell);
+            Console.WriteLine($"Now at {next}\n");
 
             //check to see if this is valid path so far
             validPathMovingWest = ValidPath(recursionCellList);
+            checkValidity = true;
         }
 
         //if he player is at the goal, set goal as true
-        if (AtGoal(end))
+        if (AtGoal(end) && validPathMovingWest)
         {
             recursionAtGoal = true;
         }
@@ -863,6 +645,7 @@ public class Main : MonoBehaviour
                             //unavailable and move back east
                             if (!recursionAtGoal)
                             {
+                                Console.WriteLine($"Left doesn't lead anywhere. Moving back right.\n");
                                 recursionCurrentCell.Valid = false;
                                 recursionCurrentCell = recursionCurrentCell.Right;
                                 recursionDirections.Remove(recursionDirections.Last());
@@ -873,17 +656,37 @@ public class Main : MonoBehaviour
                 }
             }
 
-            //otherwise, go back down and say you couldnt go east
+            //otherwise, go back east and say you couldnt go west
             else
             {
-                recursionAtGoal = false;
-                recursionCurrentCell = recursionCurrentCell.Right;
-                recursionDirections.Remove(recursionDirections.Last());
-                recursionCellList.Remove(recursionCellList.Last());
+                if (checkValidity)
+                {
+                    recursionAtGoal = false;
+                    recursionCurrentCell = recursionCurrentCell.Right;
+                    recursionDirections.Remove(recursionDirections.Last());
+                    recursionCellList.Remove(recursionCellList.Last());
+                }
+
+                Console.WriteLine($"Moving left lead to an invalid path. Going back right to {recursionCurrentCell}\n");
             }
         }
 
         return recursionAtGoal;
+    }
+
+    bool UnvisitedNonPurpleCell(Cell c)
+    {
+        if (!recursionCellList.Contains(c))
+        {
+            return true;
+        }
+
+        if (recursionCellList.Contains(c) && c.Tile == Tile.Purple)
+        {
+            return true;
+        }
+
+        return false;
     }
 
     bool AtGoal(Cell end)
@@ -903,37 +706,40 @@ public class Main : MonoBehaviour
         for (int i = 0; i < path.Count; i++)
         {
             Cell c = path[i];
+            string color = c.GetColor();
+            //cant land on blue smelling like oranges
+            if (color == "Blue" && smell == Smell.Orange)
+            {
+                return false;
+            }
 
-            if (c.GetColor() == "Orange")
+            if (color == "Orange")
             {
                 smell = Smell.Orange;
             }
 
-            else if (c.GetColor() == "Purple")
+            else if (color == "Purple")
             {
                 smell = Smell.Lemon;
-            }
 
-            if (i != path.Count - 1)
-            {
-                Cell next = path[i + 1];
-
-                if (smell == Smell.Orange && next.GetColor() == "Blue")
+                if (i != path.Count - 1)
                 {
-                    return false;
-                }
+                    Cell next = path[i + 1];
 
-                //if you on a purple cell, and you are not going the same direction that you wernt before, this is not valid
-                if (i == 0)
-                {
-                    continue;
-                }
-                Cell previous = path[i - 1];
-                Cell actualNext = previous.Up == c ? c.Up : previous.Right == c ? c.Right : previous.Down == c ? c.Down : c.Left;
+                    //if you on a purple cell, and you are not going the same direction that you wernt before, this is not valid
 
-                if (actualNext == next)
-                {
-                    return false;
+                    Cell previous = path[i - 1];
+                    Cell actualNext = previous.Up == c ? c.Up : previous.Right == c ? c.Right : previous.Down == c ? c.Down : c.Left;
+
+                    if (actualNext != next)
+                    {
+                        return false;
+                    }
+
+                    if (next.GetColor() == "Red")
+                    {
+                        return false;
+                    }
                 }
             }
         }
