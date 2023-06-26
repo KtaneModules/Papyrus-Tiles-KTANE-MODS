@@ -63,34 +63,35 @@ public class Cell  {
         SetMaterial(t);
     }
 
-    public void SetMaterial(Tile t)
+    public void SetRandomTile()
+    {
+        Tile = (Tile)Rnd.Range(0, 6);
+        SetMaterial(Tile);
+    }
+
+    private void SetMaterial(Tile t)
     {
         switch (t)
         {
             case Tile.Pink:
-                Mesh.sharedMaterial = pinkMaterial;
+                Mesh.material = pinkMaterial;
                 break;
             case Tile.Red:
-                Mesh.sharedMaterial = redMaterial;
+                Mesh.material = redMaterial;
                 break;
             case Tile.Orange:
-                Mesh.sharedMaterial = orangeMaterial;
+                Mesh.material = orangeMaterial;
                 break;
             case Tile.Purple:
-                Mesh.sharedMaterial = purpleMaterial;
+                Mesh.material = purpleMaterial;
                 break;
             case Tile.Green:
-                Mesh.sharedMaterial = greenMaterial;
+                Mesh.material = greenMaterial;
                 break;
             case Tile.Blue:
-                Mesh.sharedMaterial = blueMaterial;
+                Mesh.material = blueMaterial;
                 break;
         }
-    }
-
-    public void SetRandomMaterial()
-    {
-        SetMaterial((Tile)Rnd.Range(0, 6));
     }
 
     public override string ToString()

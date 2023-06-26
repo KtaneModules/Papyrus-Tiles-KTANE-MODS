@@ -40,7 +40,7 @@ public class Main : MonoBehaviour
     static int ModuleIdCounter = 1;
     int ModuleId;
     private bool ModuleSolved;
-    bool debug = true;
+    bool debug = false;
 
 
 
@@ -92,7 +92,7 @@ public class Main : MonoBehaviour
 
         else
         {
-            GenereatDebugMaze();
+            GenerateDebugMaze();
             SetNeighbors();
         }
 
@@ -115,7 +115,7 @@ public class Main : MonoBehaviour
 
         foreach (Cell c in grid)
         {
-            c.SetRandomMaterial();
+            c.SetRandomTile();
         }
 
         for (int i = 0; i < 8; i++)
@@ -130,12 +130,30 @@ public class Main : MonoBehaviour
             }
         }
 
-        GetThroughMaze();
+        foreach (Cell c in grid)
+        {
+            if (c.Row == 0 || c.Row == 5 || c.Col == 0 || c.Col == 7)
+            {
+                if (c.GetColor() == "Purple")
+                {
+                    Debug.Log("Found purple on " + c);
+                }
 
-        return AtGoal();
+                else
+                {
+                    Debug.Log($"{c} is not purple. It's {c.GetColor()}");
+                }
+            }
+        }
+
+        //GetThroughMaze();
+
+        //return AtGoal();
+
+        return true;
     }
 
-    void GenereatDebugMaze()
+    void GenerateDebugMaze()
     {
         int[,] grid1 = new int[,]
         {
@@ -204,7 +222,7 @@ public class Main : MonoBehaviour
             for (int col = 0; col < 8; col++)
             {
                 int index = row * 8 + col;
-                grid[row, col] = new Cell(row, col, buttons[index], (Tile)grid5[row, col]);
+                grid[row, col] = new Cell(row, col, buttons[index], (Tile)grid1[row, col]);
             }
         }
 
@@ -724,7 +742,7 @@ public class Main : MonoBehaviour
                 newList.Remove(newList.Last());
             }
 
-            if (newList.Any(x => x.Col == 7))
+            if (newList.Any(x => x.Col == 7) || current.Col == 7)
             {
                 break;
             }
@@ -803,7 +821,7 @@ public class Main : MonoBehaviour
     {
         while (c.Tile.ToString() == "Purple")
         {
-            c.SetRandomMaterial();
+            c.SetRandomTile();
         }
     }
 
