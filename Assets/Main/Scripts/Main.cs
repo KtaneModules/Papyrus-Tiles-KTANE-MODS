@@ -50,6 +50,7 @@ public class Main : MonoBehaviour
         ModuleSolved = false;
         ModuleId = ModuleIdCounter++;
 
+
         buttons = GetComponent<KMSelectable>().Children;
 
         Cell.redMaterial = materials[0];
@@ -130,23 +131,7 @@ public class Main : MonoBehaviour
             }
         }
 
-        foreach (Cell c in grid)
-        {
-            if (c.Row == 0 || c.Row == 5 || c.Col == 0 || c.Col == 7)
-            {
-                if (c.GetColor() == "Purple")
-                {
-                    Debug.Log("Found purple on " + c);
-                }
-
-                else
-                {
-                    Debug.Log($"{c} is not purple. It's {c.GetColor()}");
-                }
-            }
-        }
-
-        //GetThroughMaze();
+        GetThroughMaze();
 
         //return AtGoal();
 
@@ -205,6 +190,16 @@ public class Main : MonoBehaviour
             { 3, 5, 2, 0, 3, 3, 2, 3},
         };
 
+        int[,] grid6 = new int[,]
+        {
+        { 1, 2, 2, 2, 1, 0, 1, 5},
+        { 2, 5, 0, 5, 1, 4, 1, 5},
+        { 1, 2, 1, 2, 5, 4, 4, 3},
+        { 5, 0, 5, 3, 4, 3, 4, 5},
+        { 2, 1, 3, 5, 4, 5, 4, 2},
+        { 0, 1, 2, 0, 2, 1, 2, 0},
+        };
+
         /*
         int[,] grid2 = new int[,]
         {
@@ -222,7 +217,7 @@ public class Main : MonoBehaviour
             for (int col = 0; col < 8; col++)
             {
                 int index = row * 8 + col;
-                grid[row, col] = new Cell(row, col, buttons[index], (Tile)grid1[row, col]);
+                grid[row, col] = new Cell(row, col, buttons[index], (Tile)grid6[row, col]);
             }
         }
 
@@ -280,9 +275,9 @@ public class Main : MonoBehaviour
         if (foundPath)
         {
             recursionCellListSimplified = SimplifyAnswer(recursionCellList);
-            Debug.Log("Final Answer: " + LogList(recursionCellList));
-            Debug.Log("Final Answer (Simplified): " + LogList(recursionCellListSimplified));
-            Debug.Log($"{(recursionCellListSimplified.Count == recursionCellList.Count ? "Lists are the same" : "Lists are different")}");
+            Debug.Log($"#{ModuleId} Final Answer: " + LogList(recursionCellList));
+            Debug.Log($"#{ModuleId} Final Answer (Simplified): " + LogList(recursionCellListSimplified));
+            Debug.Log($"#{ModuleId} {(recursionCellListSimplified.Count == recursionCellList.Count ? "Lists are the same" : "Lists are different")}");
         }
 
         else
@@ -744,12 +739,16 @@ public class Main : MonoBehaviour
 
             if (newList.Any(x => x.Col == 7) || current.Col == 7)
             {
+                if (current.Col == 7)
+                {
+                    newList.Add(current);
+                }
                 break;
             }
 
         }
 
-        return newList;
+        return newList.Distinct().ToList();
     }
 
     void SetNeighbors()
@@ -781,7 +780,6 @@ public class Main : MonoBehaviour
     }
     void ResetModule()
     {
-        currentSmell = Smell.None;
         currentPos = new Cell(-1, -1, null);
         SetSmell(Smell.None);
     }
