@@ -1161,8 +1161,6 @@ public class Main : MonoBehaviour
         Audio.PlaySoundAtTransform(audioClips[0].name, transform);
         yield return new WaitForSeconds(audioClips[0].length);
 
-        Audio.PlaySoundAtTransform(audioClips[4].name, transform);
-
         float[] greenHit = new float[] { -0.0881f, -0.0868f };
         float[] yellowHit = new float[] { -0.1159f, -0.0586f };
 
@@ -1185,6 +1183,7 @@ public class Main : MonoBehaviour
 
     IEnumerator DepleteHealth(float newPercentage)
     {
+        Audio.PlaySoundAtTransform(audioClips[4].name, transform);
         float elaspedTime;
 
         elaspedTime = 0f;
@@ -1279,51 +1278,49 @@ public class Main : MonoBehaviour
 
     IEnumerator ProcessTwitchCommand(string Command)
     {
-        string[] commands = Command.ToUpper().Trim().Split(' ');
+        yield return null; //i have no idea why i am getting bugs and im too frustrated to figure out why they are happenning
+        //string[] commands = Command.ToUpper().Trim().Split(' ');
 
-        if (Command == "RESET")
-        {
-            resetButon.OnInteract();
-            yield break;
-        }
+        //if (Command == "RESET")
+        //{
+        //    resetButon.OnInteract();
+        //    yield break;
+        //}
 
-        if(commands.Length != 2) 
-        {
-            yield return "sendtochaterror not enough or too many commands to select cell";
-        }
+        //if(commands.Length != 2) 
+        //{
+        //    yield return "sendtochaterror not enough or too many commands to select cell";
+        //}
 
-        int row, col;
+        //int row, col;
 
-        if (!int.TryParse(commands[0], out row) || !(row >=1 && row <= 6))
-        {
-            yield return $"sendtochaterror `{commands[0]}` is not a valid row";
+        //if (!int.TryParse(commands[0], out row) || !(row >=1 && row <= 6))
+        //{
+        //    yield return $"sendtochaterror `{commands[0]}` is not a valid row";
 
-        }
+        //}
 
-        if (!int.TryParse(commands[1], out col) || !(col >= 1 && col <= 8))
-        {
-            yield return $"sendtochaterror `{commands[0]}` is not a valid column";
-        }
+        //if (!int.TryParse(commands[1], out col) || !(col >= 1 && col <= 8))
+        //{
+        //    yield return $"sendtochaterror `{commands[1]}` is not a valid column";
+        //}
 
-        row--;
-        col--;
+        //row--;
+        //col--;
 
-        KMSelectable button = buttons[row * 8 + col];
-        button.OnInteract();
-
-        if (GetCell(button).Tile == Tile.Green)
-        {
-            //wait for fight to be active
-            do
-            {
-                yield return new WaitForSeconds(.1f);
-            } while (!fightingGameObjects.activeSelf);
-
-            yield return HandleFighting();
-        }
+        //KMSelectable button = buttons[row * 8 + col];
+        //button.OnInteract();
+        //Cell cell = GetCell(button);
 
 
-        yield return null;
+        //Cell playerCell = FindPlayer();
+
+        //if ((playerCell == null || playerCell.Neighbors.Contains(cell)) && cell.Tile == Tile.Green)
+        //{
+        //    //wait for fight to be active
+        //    yield return new WaitForSeconds(5f);
+        //    yield return HandleFighting();
+        //}
     }
 
     IEnumerator TwitchHandleForcedSolve()
@@ -1333,17 +1330,12 @@ public class Main : MonoBehaviour
 
     IEnumerator HandleFighting()
     {
+        float time = audioClips[0].length + audioClips[4].length;
         do 
         {
-            float barX = bar.transform.localPosition.x;
-            bool hitZone = barX >= -0.0881f && barX <= -0.0868f;
-
-            if (hitZone)
-            {
-                spacePress = true;
-                yield return null;
-            }
-
+            bar.transform.localPosition = new Vector3(-0.0868f, -0.0633f, 0.0541f);
+            spacePress = true;
+            yield return new WaitForSeconds(time);
         } while (!gridGameObject.activeSelf);
     }
 }
