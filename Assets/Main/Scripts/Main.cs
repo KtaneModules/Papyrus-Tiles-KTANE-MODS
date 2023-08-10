@@ -35,6 +35,9 @@ public class Main : MonoBehaviour
     [SerializeField]
     GameObject gridGameObject;
 
+    [SerializeField]
+    Material[] enemyMaterials;
+
     Smell currentSmell;
 
     bool recursionAtGoal;
@@ -96,7 +99,7 @@ public class Main : MonoBehaviour
 
             if (count == 100 && !validMaze)
             {
-                Debug.LogFormat("Couldn't generate a good maze. Generate default maze...");
+                Logging("Couldn't generate a good maze. Generate default maze...");
 
                 for (int row = 0; row < 6; row++)
                 {
@@ -323,10 +326,6 @@ public class Main : MonoBehaviour
                 break;
             }
         }
-
-
-        // foundPath = FindPathRecursion(grid[1,0], grid[0, 7]);
-
 
         if (foundPath)
         {
