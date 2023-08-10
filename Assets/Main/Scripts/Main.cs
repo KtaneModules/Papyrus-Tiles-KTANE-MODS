@@ -10,11 +10,13 @@ using System;
 
 public class Main : MonoBehaviour
 {
-    //todo add a reset button
+    //todo module solve once heart is in the right most columns
+    //todo add the victory sound
     //todo add the monster shaking when hit
     //todo remove the line in the manual that says the monster health scales
     //todo reword the manual: once a green button is pressed the module will switch to fighting mode
     //todo add in the manual press space will cause an atack
+
 
 
     private KMBombInfo Bomb;
@@ -65,7 +67,7 @@ public class Main : MonoBehaviour
     private RectTransform rectTransform;
 
     [SerializeField]
-    private AudioClip[] audioClips; //knife, encounter 1, encounter 2, love, hit
+    private AudioClip[] audioClips; //knife, encounter 1, encounter 2, love, hit, walk
 
     private KMSelectable resetButon;
 
@@ -317,6 +319,10 @@ public class Main : MonoBehaviour
         
         if (!firstPress)
         {
+            if (maxTime == audioClips[5].length)
+            {
+                Audio.PlaySoundAtTransform(audioClips[5].name, transform);
+            }
             while (elaspedTime < maxTime)
             {
                 float t = elaspedTime / maxTime;
@@ -902,7 +908,7 @@ public class Main : MonoBehaviour
         Cell selectedCell = GetCell(button);
         Cell playerCell = FindPlayer();
 
-        float walkingTime = .5f;
+        float walkingTime = audioClips[5].length;
         float runningTime = .2f;
 
         //if the user is not on the grid make sure they press a button in the first column
