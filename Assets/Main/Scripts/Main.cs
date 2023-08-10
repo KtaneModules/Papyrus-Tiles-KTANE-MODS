@@ -6,6 +6,9 @@ using System.Text.RegularExpressions;
 using UnityEngine;
 using KModkit;
 using Rnd = UnityEngine.Random;
+using System.Reflection;
+using NUnit.Framework.Constraints;
+using System.Xml;
 
 public class Main : MonoBehaviour
 {
@@ -14,7 +17,6 @@ public class Main : MonoBehaviour
     public KMAudio Audio;
 
     Cell[,] grid;
-    Cell currentPos;
 
     KMSelectable[] buttons;
 
@@ -27,6 +29,12 @@ public class Main : MonoBehaviour
     [SerializeField]
     GameObject lemon;
 
+    [SerializeField]
+    GameObject heart;
+
+    [SerializeField]
+    GameObject gridGameObject;
+
     Smell currentSmell;
 
     bool recursionAtGoal;
@@ -34,13 +42,15 @@ public class Main : MonoBehaviour
     private List<Cell> recursionCellList;
     private List<Cell> recursionCellListSimplified;
 
+
     List<string> recursionDirections;
 
     static int ModuleIdCounter = 1;
     int ModuleId;
     private bool ModuleSolved;
     bool debug = false;
-
+    private bool pressable;
+    private bool fightingMonster;
 
 
     void Awake()
@@ -49,7 +59,7 @@ public class Main : MonoBehaviour
         ModuleSolved = false;
         ModuleId = ModuleIdCounter++;
 
-
+        heart.SetActive(false);
         buttons = GetComponent<KMSelectable>().Children;
 
         Cell.redMaterial = materials[0];
@@ -69,7 +79,7 @@ public class Main : MonoBehaviour
                     int index = row * 8 + col;
                     grid[row, col] = new Cell(row, col, buttons[index]);
 
-                    buttons[index].OnInteract += delegate () { KeypadPress(buttons[index]); return false; };
+                    buttons[index].OnInteract += delegate () { if(pressable && !fightingMonster) StartCoroutine(ButtonPress(buttons[index])); return false; };
                 }
             }
 
@@ -84,9 +94,20 @@ public class Main : MonoBehaviour
                 validMaze = GenerateMaze();
             } while (!validMaze && count < 100);
 
-            if (count == 100)
+            if (count == 100 && !validMaze)
             {
-                Debug.Log("Couldn't generate a good maze");
+                Debug.LogFormat("Couldn't generate a good maze. Generate default maze...");
+
+                for (int row = 0; row < 6; row++)
+                {
+                    Tile tile = row == 2 || row == 3 ? Tile.Pink : Tile.Red;
+
+                    for (int col = 0; col < 8; col++)
+                    {
+                        int index = row * 8 + col;
+                        grid[row, col] = new Cell(row, col, buttons[index], tile);
+                    }
+                }
             }
         }
 
@@ -96,17 +117,8 @@ public class Main : MonoBehaviour
             SetNeighbors();
         }
 
-    }
+        SetSmell(Smell.None);
 
-    void KeypadPress(KMSelectable button)
-    {
-        Debug.Log(GetCell(button));
-        button.AddInteractionPunch(1f);
-
-        if (ModuleSolved)
-        {
-            return;
-        }
     }
 
     bool GenerateMaze()
@@ -132,9 +144,7 @@ public class Main : MonoBehaviour
 
         GetThroughMaze();
 
-        //return AtGoal();
-
-        return true;
+       return AtGoal();
     }
 
     void GenerateDebugMaze()
@@ -225,6 +235,53 @@ public class Main : MonoBehaviour
         GetThroughMaze();
     }
 
+    Cell FindPlayer()
+    {
+        foreach (Cell c in grid)
+        {
+            if (c.HasPlayer)
+            {
+                return c;
+            }
+        }
+
+        return null;
+    }
+
+    IEnumerator SetPlayer(Cell currentCell, bool firstPress, float maxTime)
+    {
+        foreach (Cell c in grid)
+        {
+            if (c.HasPlayer)
+            {
+                c.HasPlayer = false;
+            }
+        }
+        
+        currentCell.HasPlayer = true;
+        float elaspedTime = 0f;
+
+        Vector3 finalDestiantion = currentCell.Button.transform.position;
+        Vector3 oldHeartPosition = heart.transform.position;
+        
+        if (!firstPress)
+        {
+            while (elaspedTime < maxTime)
+            {
+                float t = elaspedTime / maxTime;
+                Vector3 newPos = Vector3.Lerp(oldHeartPosition, finalDestiantion, t);
+                heart.transform.position = new Vector3(newPos.x, oldHeartPosition.y, newPos.z);
+                elaspedTime += Time.deltaTime;
+                yield return null;
+            }
+        }
+
+        else
+        {
+            heart.transform.position = new Vector3(finalDestiantion.x, oldHeartPosition.y, finalDestiantion.z);
+        }  
+    }
+
 
     void GetThroughMaze()
     {
@@ -274,8 +331,11 @@ public class Main : MonoBehaviour
         if (foundPath)
         {
             recursionCellListSimplified = SimplifyAnswer(recursionCellList);
-            Debug.Log($"#{ModuleId} Final Answer: " + LogList(recursionCellList));
-            Debug.Log($"#{ModuleId} Final Answer (Simplified): " + LogList(recursionCellListSimplified));
+            Logging($"Final Answer: " + LogList(recursionCellList));
+            if (recursionCellListSimplified.Count == recursionCellList.Count)
+            {
+                Logging($"Final Answer (Simplified): " + LogList(recursionCellListSimplified));
+            }
             Debug.Log($"#{ModuleId} {(recursionCellListSimplified.Count == recursionCellList.Count ? "Lists are the same" : "Lists are different")}");
         }
 
@@ -607,7 +667,7 @@ public class Main : MonoBehaviour
                         //if moving east doesn't work, move south
                         if (!recursionAtGoal)
                         {
-                            recursionAtGoal = MoveEast(end);
+                            recursionAtGoal = MoveSouth(end);
 
                             //if moving south doesn't work, mark this position as
                             //unavailable and move back east
@@ -779,13 +839,151 @@ public class Main : MonoBehaviour
     }
     void ResetModule()
     {
-        currentPos = new Cell(-1, -1, null);
+        foreach (Cell c in grid)
+        {
+            c.HasPlayer = false;
+        }
+
+        heart.SetActive(false);
         SetSmell(Smell.None);
+    }
+
+    IEnumerator ButtonPress(KMSelectable button)
+    {
+        pressable = false;
+        button.AddInteractionPunch(.1f);
+        Cell selectedCell = GetCell(button);
+        Cell playerCell = FindPlayer();
+
+        float walkingTime = .5f;
+        float runningTime = .2f;
+
+        //if the user is not on the grid make sure they press a button in the first column
+        if (playerCell == null)
+        {
+            if (selectedCell.Col != 0)
+            {
+                pressable = true;
+                yield break;
+            }
+
+            else
+            {
+                if (selectedCell.Tile == Tile.Red)
+                {
+                    pressable = true;
+                    yield break;
+                }
+
+                if (selectedCell.Tile == Tile.Orange)
+                {
+                    SetSmell(Smell.Orange);
+                }
+
+                Logging("Pressed " + selectedCell.ToString());
+                heart.SetActive(true);
+                yield return SetPlayer(selectedCell, true, walkingTime);
+                pressable = true;
+            }
+        }
+
+        else
+        {
+            //only neighbor cells can be interacted wih
+
+            List<Cell> neighbors = playerCell.Neighbors;
+
+            if (!neighbors.Contains(selectedCell))
+            {
+                yield break;
+            }
+
+            else
+            {
+                if (selectedCell.Tile == Tile.Red)
+                {
+                    pressable = true;
+                    yield break;
+                }
+
+                Logging("Pressed: " + selectedCell.ToString());
+                switch (selectedCell.Tile)
+                {
+                    case Tile.Orange:
+                        SetSmell(Smell.Orange);
+                        break;
+                    case Tile.Blue:
+                        if (currentSmell == Smell.Orange)
+                        {
+
+                            //yield return SetPlayer(selectedCell, false, walkingTime);
+                            ////todo have a chomping noise play
+                            //Strike("Strike! Got bit by pirahnas. Moving back to " + playerCell.ToString());
+                            //yield return SetPlayer(playerCell, false, runningTime);
+                            //pressable = true;
+                            //yield break;
+                        }
+                        break;
+                    case Tile.Purple:
+                        //string direction = playerCell.Up == selectedCell ? "up" :
+                        //                   playerCell.Down == selectedCell ? "down" :
+                        //                   playerCell.Right == selectedCell ? "right" : "left";
+
+                        //Cell currentCell = playerCell;
+                        
+                        //do
+                        //{
+                        //    Cell nextCell = direction == "up" ? currentCell.Up :
+                        //                    direction == "down" ? currentCell.Down :
+                        //                    direction == "right" ? currentCell.Right : currentCell.Left;
+
+                        //    yield return SetPlayer(nextCell, false, walkingTime);
+                        //    SetSmell(Smell.Lemon);
+                        //    currentCell = nextCell;
+
+                        //} while (currentCell.Tile == Tile.Purple);
+
+                        //Logging("Moved to " + currentCell.ToString());
+
+                        //if (currentCell.Tile == Tile.Red)
+                        //{
+                        //    Strike("Strike! Slid to a red tile. Restarting module...");
+                        //    ResetModule();
+                        //}
+
+                        //else if (currentCell.Tile == Tile.Orange)
+                        //{
+                        //    SetSmell(Smell.Orange);
+                        //}
+
+                        //else if (currentCell.Tile == Tile.Green)
+                        //{
+                        //    //todo add code for monster fighting
+                        //}
+                        //pressable = true;
+                        //yield break;
+
+                    case Tile.Green:
+                        HandleGreenTiles();
+                        break;
+                }
+
+                    yield return SetPlayer(selectedCell, false, walkingTime);
+
+                pressable = true;
+            }
+        }
+    }
+
+    void HandleGreenTiles()
+    {
+
     }
 
     void Start()
     {
-
+        pressable = true;
+        fightingMonster = false;
     }
 
     void Update()
@@ -825,6 +1023,23 @@ public class Main : MonoBehaviour
     private string LogList(List<Cell> list)
     {
         return string.Join(" ", list.Select(x => x.ToString()).ToArray());
+    }
+
+    private void Logging(string s)
+    {
+        if (s == "")
+        {
+            return;
+        }
+
+        Debug.LogFormat($"[Papyrus Tiles #{ModuleId}] {s}");
+            
+    }
+
+    private void Strike(string s)
+    {
+        GetComponent<KMBombModule>().HandleStrike();
+        Logging(s);
     }
 
 #pragma warning disable 414

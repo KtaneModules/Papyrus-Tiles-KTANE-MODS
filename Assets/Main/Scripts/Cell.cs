@@ -29,14 +29,19 @@ public class Cell  {
     public Cell Right { get; set; }
     public Cell Down { get; set; }
     public Cell Left { get; set; }
+
+    public List<Cell> Neighbors { get { return new List<Cell>() { Up, Right, Down, Left }; } }
     public Cell Parent { get; set; }
     public bool Visited { get; set; }
+
+    public bool HasPlayer { get; set; }
 
     public Cell(int row, int col, KMSelectable button)
     {
         Row = row;
         Col = col;
         Button = button;
+        HasPlayer = false;
 
         if (button != null)
         {
