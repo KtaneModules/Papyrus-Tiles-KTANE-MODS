@@ -10,7 +10,6 @@ using System;
 
 public class Main : MonoBehaviour
 {
-    //todo module solve once heart is in the right most columns
     //todo add the victory sound
     //todo add the monster shaking when hit
     //todo remove the line in the manual that says the monster health scales
@@ -67,7 +66,7 @@ public class Main : MonoBehaviour
     private RectTransform rectTransform;
 
     [SerializeField]
-    private AudioClip[] audioClips; //knife, encounter 1, encounter 2, love, hit, walk
+    private AudioClip[] audioClips; //knife, encounter 1, encounter 2, love, hit, walk, victory
 
     private KMSelectable resetButon;
 
@@ -1245,6 +1244,7 @@ public class Main : MonoBehaviour
 
     private void Solve()
     {
+        Audio.PlaySoundAtTransform(audioClips[6].name, transform);
         Logging("Module solved");
         GetComponent<KMBombModule>().HandlePass();
         ModuleSolved = true;
