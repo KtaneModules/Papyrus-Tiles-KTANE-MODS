@@ -10,7 +10,6 @@ using System;
 
 public class Main : MonoBehaviour
 {
-    //todo add the victory sound
     //todo add the monster shaking when hit
     //todo remove the line in the manual that says the monster health scales
     //todo reword the manual: once a green button is pressed the module will switch to fighting mode
@@ -66,7 +65,7 @@ public class Main : MonoBehaviour
     private RectTransform rectTransform;
 
     [SerializeField]
-    private AudioClip[] audioClips; //knife, encounter 1, encounter 2, love, hit, walk, victory
+    private AudioClip[] audioClips; //knife, encounter 1, encounter 2, love, hit, walk, victory, chomp
 
     private KMSelectable resetButon;
 
@@ -908,7 +907,7 @@ public class Main : MonoBehaviour
         Cell playerCell = FindPlayer();
 
         float walkingTime = audioClips[5].length;
-        float runningTime = .2f;
+        float runningTime = audioClips[7].length;
 
         //if the user is not on the grid make sure they press a button in the first column
         if (playerCell == null)
@@ -979,6 +978,7 @@ public class Main : MonoBehaviour
                             Debug.Log("blue");
                             yield return SetPlayer(selectedCell, false, walkingTime);
                             //todo have a chomping noise play
+                            Audio.PlaySoundAtTransform(audioClips[7].name, transform);
                             Strike("Strike! Got bit by pirahnas. Moving back to " + playerCell.ToString());
                             yield return SetPlayer(playerCell, false, runningTime);
                             pressable = true;
