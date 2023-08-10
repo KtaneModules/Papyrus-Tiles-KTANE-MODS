@@ -110,7 +110,7 @@ public class Main : MonoBehaviour
 
         resetButon = tempButtons[tempButtons.Length - 1];
 
-        resetButon.OnInteract += delegate () { if (pressable && !fightingMonster) ResetModule(); return false; };
+        resetButon.OnInteract += delegate () { if (pressable && !fightingMonster && !ModuleSolved) ResetModule(); return false; };
 
 
         Cell.redMaterial = materials[0];
@@ -133,7 +133,7 @@ public class Main : MonoBehaviour
                     int index = row * 8 + col;
                     grid[row, col] = new Cell(row, col, buttons[index]);
 
-                    buttons[index].OnInteract += delegate () { if(pressable && !fightingMonster) StartCoroutine(ButtonPress(buttons[index])); return false; };
+                    buttons[index].OnInteract += delegate () { if(pressable && !fightingMonster && !ModuleSolved) StartCoroutine(ButtonPress(buttons[index])); return false; };
                 }
             }
 
@@ -1024,6 +1024,11 @@ public class Main : MonoBehaviour
                         {
                             yield return HandleGreenTiles();
                         }
+
+                        else if (currentCell.Col == 7)
+                        {
+                            Solve();
+                        }
                         pressable = true;
                         yield break;
 
@@ -1037,6 +1042,12 @@ public class Main : MonoBehaviour
                 }
                 yield return SetPlayer(selectedCell, false, walkingTime);
                 pressable = true;
+
+
+                if (FindPlayer().Col == 7)
+                {
+                    Solve();
+                }
             }
         }
     }
@@ -1230,6 +1241,13 @@ public class Main : MonoBehaviour
 
         Debug.LogFormat($"[Papyrus Tiles #{ModuleId}] {s}");
             
+    }
+
+    private void Solve()
+    {
+        Logging("Module solved");
+        GetComponent<KMBombModule>().HandlePass();
+        ModuleSolved = true;
     }
 
     private void Strike(string s)
