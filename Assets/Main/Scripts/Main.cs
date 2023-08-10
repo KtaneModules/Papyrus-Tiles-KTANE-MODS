@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using UnityEngine;
 using KModkit;
 using Rnd = UnityEngine.Random;
-using System.Reflection;
-using NUnit.Framework.Constraints;
-using System.Xml;
-using static System.Runtime.CompilerServices.RuntimeHelpers;
+using UnityEngine.UI;
+
 
 public class Main : MonoBehaviour
 {
@@ -21,6 +17,13 @@ public class Main : MonoBehaviour
     //todo add a reset button
     //todo add the monster losing health
     //todo add the monster shaking when hit
+    //todo add hit audio
+    //todo add health bar
+    //todo add trigger for monster dying
+    //todo add level up sound when monster dies and go back to grid
+    //todo remove the line in the manual that says the monster health scales
+
+
     private KMBombInfo Bomb;
     private KMAudio Audio;
 
@@ -47,6 +50,9 @@ public class Main : MonoBehaviour
     private GameObject heart;
 
     [SerializeField]
+    private GameObject exclamationPoint;
+
+    [SerializeField]
     private GameObject gridGameObject;
 
     [SerializeField]
@@ -59,7 +65,11 @@ public class Main : MonoBehaviour
     private GameObject bar;
 
     [SerializeField]
-    private AudioClip knifeAudio;
+    private Image currentHealthBar;
+    private RectTransform rectTransform;
+
+    [SerializeField]
+    private AudioClip[] audioClips; //knife, encounter 1, encounter 2
 
     private bool focused;
 
@@ -78,10 +88,16 @@ public class Main : MonoBehaviour
     private bool debug = false;
     private bool pressable;
     private bool fightingMonster;
+    private float monsterHealth;
+    private float maxHealth;
+    private float currentPercentage;
+    
 
 
     void Awake()
     {
+        exclamationPoint.SetActive(false);
+        rectTransform = currentHealthBar.GetComponent<RectTransform>();
         Bomb = GetComponent<KMBombInfo>();
         Audio = GetComponent<KMAudio>();
         ModuleSolved = false;
@@ -912,7 +928,7 @@ public class Main : MonoBehaviour
 
                 if (selectedCell.Tile == Tile.Green)
                 {
-                    HandleGreenTiles();
+                    yield return HandleGreenTiles();
                 }
                 pressable = true;
             }
@@ -947,85 +963,117 @@ public class Main : MonoBehaviour
                         if (currentSmell == Smell.Orange)
                         {
 
-                            //yield return SetPlayer(selectedCell, false, walkingTime);
-                            ////todo have a chomping noise play
-                            //Strike("Strike! Got bit by pirahnas. Moving back to " + playerCell.ToString());
-                            //yield return SetPlayer(playerCell, false, runningTime);
-                            //pressable = true;
-                            //yield break;
+                            yield return SetPlayer(selectedCell, false, walkingTime);
+                            //todo have a chomping noise play
+                            Strike("Strike! Got bit by pirahnas. Moving back to " + playerCell.ToString());
+                            yield return SetPlayer(playerCell, false, runningTime);
+                            pressable = true;
+                            yield break;
                         }
                         break;
                     case Tile.Purple:
-                        //string direction = playerCell.Up == selectedCell ? "up" :
-                        //                   playerCell.Down == selectedCell ? "down" :
-                        //                   playerCell.Right == selectedCell ? "right" : "left";
+                        string direction = playerCell.Up == selectedCell ? "up" :
+                                           playerCell.Down == selectedCell ? "down" :
+                                           playerCell.Right == selectedCell ? "right" : "left";
 
-                        //Cell currentCell = playerCell;
+                        Cell currentCell = playerCell;
 
-                        //do
-                        //{
-                        //    Cell nextCell = direction == "up" ? currentCell.Up :
-                        //                    direction == "down" ? currentCell.Down :
-                        //                    direction == "right" ? currentCell.Right : currentCell.Left;
+                        do
+                        {
+                            Cell nextCell = direction == "up" ? currentCell.Up :
+                                            direction == "down" ? currentCell.Down :
+                                            direction == "right" ? currentCell.Right : currentCell.Left;
 
-                        //    yield return SetPlayer(nextCell, false, walkingTime);
-                        //    SetSmell(Smell.Lemon);
-                        //    currentCell = nextCell;
+                            yield return SetPlayer(nextCell, false, walkingTime);
+                            SetSmell(Smell.Lemon);
+                            currentCell = nextCell;
 
-                        //} while (currentCell.Tile == Tile.Purple);
+                        } while (currentCell.Tile == Tile.Purple);
 
-                        //Logging("Moved to " + currentCell.ToString());
+                        Logging("Moved to " + currentCell.ToString());
 
-                        //if (currentCell.Tile == Tile.Red)
-                        //{
-                        //    Strike("Strike! Slid to a red tile. Restarting module...");
-                        //    ResetModule();
-                        //}
+                        if (currentCell.Tile == Tile.Red)
+                        {
+                            Strike("Strike! Slid to a red tile. Restarting module...");
+                            ResetModule();
+                        }
 
-                        //else if (currentCell.Tile == Tile.Orange)
-                        //{
-                        //    SetSmell(Smell.Orange);
-                        //}
+                        else if (currentCell.Tile == Tile.Orange)
+                        {
+                            SetSmell(Smell.Orange);
+                        }
 
-                        //else if (currentCell.Tile == Tile.Green)
-                        //{
-                        //    HandleGreenTiles();
-                        //}
-                        //pressable = true;
-                        //yield break;
+                        else if (currentCell.Tile == Tile.Green)
+                        {
+                            yield return HandleGreenTiles();
+                        }
+                        pressable = true;
+                        yield break;
 
                     case Tile.Green:
-                        HandleGreenTiles();
+                        yield return SetPlayer(selectedCell, false, walkingTime);
+                        yield return HandleGreenTiles();
                         break;
                 }
-
-                    yield return SetPlayer(selectedCell, false, walkingTime);
-
                 pressable = true;
             }
         }
     }
-    void HandleGreenTiles()
+    IEnumerator HandleGreenTiles()
     {
-        gridGameObject.SetActive(false);
+        Debug.Log("handle green called");
+        Vector3 heartPos = heart.transform.localPosition;
+        exclamationPoint.transform.localPosition = new Vector3(heartPos.x, heartPos.y, heartPos.z + 0.00961666f);
+        exclamationPoint.SetActive(true);
+        fightingMonster = true;
+        monsterHealth = 9;
+        maxHealth = 9;
+        currentPercentage = 1f;
         //todo play sound of fight encounter
+        Audio.PlaySoundAtTransform(audioClips[1].name, transform);
+        yield return new WaitForSeconds(audioClips[1].length + .1f);
+        float flashLength = 0.12f;
+        exclamationPoint.SetActive(false);
+        Audio.PlaySoundAtTransform(audioClips[2].name, transform);
+
+        for (int i = 0; i < 3; i++)
+        {
+            heart.SetActive(false);
+            yield return new WaitForSeconds(flashLength/2);
+            heart.SetActive(true);
+            yield return new WaitForSeconds(flashLength / 2);
+        }
+
+        yield return new WaitForSeconds(audioClips[2].length - flashLength - .6f);
+        gridGameObject.SetActive(false);
         fightingGameObjects.SetActive(true);
 
-        StartCoroutine(MoveBar());
+        do 
+        {
+            yield return MoveBar();
+
+        } while (monsterHealth > 0);
+
+        fightingMonster = false;
+        fightingGameObjects.SetActive(false);
+        gridGameObject.SetActive(true);
     }
 
     IEnumerator MoveBar()
     {
         bool spacePress = false;
-        float maxTime = 1.25f;
+        float moveWhiteMaxTime = 1.25f;
+        float elaspedTime;
+
 
         Vector3 leftPos = new Vector3(-0.1674f, -0.0633f, 0.0541f);
         Vector3 rightPos = new Vector3(-0.0079f, -0.0633f, 0.0541f);
+
         bar.transform.localPosition = leftPos;
         do
         {
-            float elaspedTime = 0f;
-            while (elaspedTime < maxTime)
+            elaspedTime = 0f;
+            while (elaspedTime < moveWhiteMaxTime)
             {
                 if (focused && Input.GetKeyDown(KeyCode.Space))
                 {
@@ -1033,7 +1081,7 @@ public class Main : MonoBehaviour
                     break;
                 }
 
-                float t = elaspedTime / maxTime;
+                float t = elaspedTime / moveWhiteMaxTime;
                 bar.transform.localPosition = Vector3.Lerp(leftPos, rightPos, t);
                 elaspedTime += Time.deltaTime;
                 yield return null;
@@ -1044,7 +1092,7 @@ public class Main : MonoBehaviour
                 break;
             }
             elaspedTime = 0f;
-            while (elaspedTime < maxTime)
+            while (elaspedTime < moveWhiteMaxTime)
             {
                 if (focused && Input.GetKeyDown(KeyCode.Space))
                 {
@@ -1052,7 +1100,7 @@ public class Main : MonoBehaviour
                     break;
                 }
 
-                float t = elaspedTime / maxTime;
+                float t = elaspedTime / moveWhiteMaxTime;
                 bar.transform.localPosition = Vector3.Lerp(rightPos, leftPos, t);
                 elaspedTime += Time.deltaTime;
                 yield return null;
@@ -1061,7 +1109,43 @@ public class Main : MonoBehaviour
         } while (!spacePress);
 
         animator.SetTrigger("Trigger Knife Swing");
-        Audio.PlaySoundAtTransform(knifeAudio.name, transform);
+        Audio.PlaySoundAtTransform(audioClips[0].name, transform);
+
+        //deplete health
+
+        float[] greenHit = new float[] { -0.0881f, -0.0868f };
+        float[] yellowHit = new float[] { -0.1159f, -0.0586f };
+
+        float barY = bar.transform.localPosition.y;
+        if (barY >= greenHit[0] && barY <= greenHit[1])
+        {
+            monsterHealth -= maxHealth / 2;
+        }
+
+        else if (barY >= yellowHit[0] && barY <= yellowHit[1])
+        {
+            monsterHealth -= maxHealth / 3;
+        }
+
+        else
+        {
+            monsterHealth -= maxHealth / 4;
+        }
+
+        float newPercentage = monsterHealth / maxHealth;
+
+        elaspedTime = 0f;
+        float maxDepleteHealthTime = 1f;
+        while (elaspedTime < maxDepleteHealthTime)
+        {
+            float t = elaspedTime / maxDepleteHealthTime;
+            rectTransform.anchorMax = new Vector2(Mathf.Lerp(currentPercentage, newPercentage, t), 1f);
+            elaspedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        rectTransform.anchorMax = new Vector2(newPercentage, 1f);
+        currentPercentage = newPercentage;
     }
 
     void Start()
