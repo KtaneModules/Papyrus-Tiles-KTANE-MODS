@@ -5,6 +5,7 @@ using UnityEngine;
 using KModkit;
 using Rnd = UnityEngine.Random;
 using UnityEngine.UI;
+using System;
 
 
 public class Main : MonoBehaviour
@@ -13,8 +14,6 @@ public class Main : MonoBehaviour
     //todo add in the manual press space will cause an atack
     //todo add a reset button
     //todo add the monster shaking when hit
-    //todo add hit audio
-    //todo add trigger for monster dying
     //todo add level up sound when monster dies and go back to grid
     //todo remove the line in the manual that says the monster health scales
     //todo have a random monster spawn
@@ -59,6 +58,9 @@ public class Main : MonoBehaviour
 
     [SerializeField]
     private GameObject bar;
+
+    [SerializeField]
+    private MeshRenderer enemyRenderer;
 
     [SerializeField]
     private Image currentHealthBar;
@@ -1017,6 +1019,7 @@ public class Main : MonoBehaviour
     }
     IEnumerator HandleGreenTiles()
     {
+        enemyRenderer.materials = new Material[] { enemyMaterials[Rnd.Range(0, enemyMaterials.Length)] };
         Vector3 heartPos = heart.transform.localPosition;
         exclamationPoint.transform.localPosition = new Vector3(heartPos.x, heartPos.y, heartPos.z + 0.00961666f);
         exclamationPoint.SetActive(true);
