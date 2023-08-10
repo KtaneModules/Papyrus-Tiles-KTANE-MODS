@@ -10,13 +10,9 @@ using System;
 
 public class Main : MonoBehaviour
 {
-    //todo add the monster shaking when hit
-    //todo remove the line in the manual that says the monster health scales
-    //todo reword the manual: once a green button is pressed the module will switch to fighting mode
-    //todo add in the manual press space will cause an atack
-
-
-
+    //todo tp
+    //todo autosolve
+    //todo get rid of debug lines
     private KMBombInfo Bomb;
     private KMAudio Audio;
 
@@ -26,9 +22,6 @@ public class Main : MonoBehaviour
 
     [SerializeField]
     private Animator animator;
-
-    [SerializeField]
-    private SpriteRenderer spriteRenderer;
 
     [SerializeField]
     private Material[] materials; // red, orange, green, blue, purple, pink
@@ -89,6 +82,7 @@ public class Main : MonoBehaviour
     private float monsterHealth;
     private float maxHealth;
     private float currentPercentage;
+    private bool printDebugLines = false;
     
 
 
@@ -387,12 +381,15 @@ public class Main : MonoBehaviour
             {
                 Logging($"Final Answer (Simplified): " + LogList(recursionCellListSimplified));
             }
-            Debug.Log($"#{ModuleId} {(recursionCellListSimplified.Count == recursionCellList.Count ? "Lists are the same" : "Lists are different")}");
+
+            if(printDebugLines)
+                Debug.Log($"#{ModuleId} {(recursionCellListSimplified.Count == recursionCellList.Count ? "Lists are the same" : "Lists are different")}");
         }
 
         else
         {
-            Debug.Log("Couldn't find a path to complete this maze");
+            if(printDebugLines)
+                Debug.Log("Couldn't find a path to complete this maze");
         }
     }
 
@@ -416,7 +413,8 @@ public class Main : MonoBehaviour
 
         else
         {
-            Debug.Log($"Could not find path from {start} to {end}");
+            if(printDebugLines)
+                Debug.Log($"Could not find path from {start} to {end}");
             return false;
         }
 
@@ -428,8 +426,8 @@ public class Main : MonoBehaviour
 
         Cell next = recursionCurrentCell.Up;
 
-
-        Debug.Log($"Attempting to move up to {next}\n");
+        if (printDebugLines)
+            Debug.Log($"Attempting to move up to {next}\n");
 
         bool validPathMovingNorth = false;
         bool checkValidity = false;
@@ -438,7 +436,8 @@ public class Main : MonoBehaviour
             recursionCurrentCell = recursionCurrentCell.Up;
             recursionDirections.Add("UP");
             recursionCellList.Add(recursionCurrentCell);
-            Debug.Log($"Now at {next}\n");
+            if (printDebugLines)
+                Debug.Log($"Now at {next}\n");
 
             //check to see if this is valid path so far
             validPathMovingNorth = ValidPath(recursionCellList);
@@ -477,7 +476,8 @@ public class Main : MonoBehaviour
                             //unavailable and move back south
                             if (!recursionAtGoal)
                             {
-                                Debug.Log($"Up doesn't lead anywhere. Moving back down.\n");
+                                if (printDebugLines)
+                                    Debug.Log($"Up doesn't lead anywhere. Moving back down.\n");
                                 recursionCurrentCell.Valid = false;
                                 recursionCurrentCell = recursionCurrentCell.Down;
                                 recursionDirections.Remove(recursionDirections.Last());
@@ -499,7 +499,8 @@ public class Main : MonoBehaviour
                     recursionCellList.Remove(recursionCellList.Last());
                 }
 
-                Debug.Log($"Moving up lead to an invalid path. Going back down to {recursionCurrentCell}\n");
+                if (printDebugLines)
+                    Debug.Log($"Moving up lead to an invalid path. Going back down to {recursionCurrentCell}\n");
             }
         }
 
@@ -510,7 +511,8 @@ public class Main : MonoBehaviour
     {
         //if we can move east, and we didnt move west before, go east
         Cell next = recursionCurrentCell.Right;
-        Debug.Log($"Attempting to move right to {next}\n");
+        if (printDebugLines)
+            Debug.Log($"Attempting to move right to {next}\n");
 
 
         bool validPathMovingEast = false;
@@ -521,7 +523,8 @@ public class Main : MonoBehaviour
             recursionCurrentCell = recursionCurrentCell.Right;
             recursionDirections.Add("RIGHT");
             recursionCellList.Add(recursionCurrentCell);
-            Debug.Log($"Now at {next}\n");
+            if (printDebugLines)
+                Debug.Log($"Now at {next}\n");
 
             //check to see if this is valid path so far
             validPathMovingEast = ValidPath(recursionCellList);
@@ -561,7 +564,8 @@ public class Main : MonoBehaviour
                             //unavailable and move back west
                             if (!recursionAtGoal)
                             {
-                                Debug.Log($"Right doesn't lead anywhere. Moving back Left.\n");
+                                if (printDebugLines)
+                                    Debug.Log($"Right doesn't lead anywhere. Moving back Left.\n");
                                 recursionCurrentCell.Valid = false;
                                 recursionCurrentCell = recursionCurrentCell.Left;
                                 recursionDirections.Remove(recursionDirections.Last());
@@ -583,7 +587,8 @@ public class Main : MonoBehaviour
                     recursionCellList.Remove(recursionCellList.Last());
                 }
 
-                Debug.Log($"Moving right lead to an invalid path. Going back left to {recursionCurrentCell}\n");
+                if (printDebugLines)
+                    Debug.Log($"Moving right lead to an invalid path. Going back left to {recursionCurrentCell}\n");
             }
         }
 
@@ -594,7 +599,8 @@ public class Main : MonoBehaviour
     {
         //if we can move south, and we didnt move north before, go south
         Cell next = recursionCurrentCell.Down;
-        Debug.Log($"Attempting to move down to {next}\n");
+        if (printDebugLines)
+            Debug.Log($"Attempting to move down to {next}\n");
         bool validPathMovingSouth = false;
         bool checkValidity = false;
 
@@ -604,7 +610,8 @@ public class Main : MonoBehaviour
             recursionCurrentCell = recursionCurrentCell.Down;
             recursionDirections.Add("DOWN");
             recursionCellList.Add(recursionCurrentCell);
-            Debug.Log($"Now at {next}\n");
+            if (printDebugLines)
+                Debug.Log($"Now at {next}\n");
 
             //check to see if this is valid path so far
             validPathMovingSouth = ValidPath(recursionCellList);
@@ -643,7 +650,8 @@ public class Main : MonoBehaviour
                             //unavailable and move back north
                             if (!recursionAtGoal)
                             {
-                                Debug.Log($"Down doesn't lead anywhere. Moving back up.\n");
+                                if (printDebugLines)
+                                    Debug.Log($"Down doesn't lead anywhere. Moving back up.\n");
                                 recursionCurrentCell.Valid = false;
                                 recursionCurrentCell = recursionCurrentCell.Up;
                                 recursionDirections.Remove(recursionDirections.Last());
@@ -665,7 +673,8 @@ public class Main : MonoBehaviour
                     recursionCellList.Remove(recursionCellList.Last());
                 }
 
-                Debug.Log($"Moving down lead to an invalid path. Going back up to {recursionCurrentCell}\n");
+                if (printDebugLines)
+                    Debug.Log($"Moving down lead to an invalid path. Going back up to {recursionCurrentCell}\n");
             }
         }
 
@@ -676,7 +685,9 @@ public class Main : MonoBehaviour
     {
         //if we can move west, and we didnt move east before, go west
         Cell next = recursionCurrentCell.Left;
-        Debug.Log($"Attempting to move left to {next}\n");
+
+        if (printDebugLines)
+            Debug.Log($"Attempting to move left to {next}\n");
         bool validPathMovingWest = false;
         bool checkValidity = false;
 
@@ -685,7 +696,8 @@ public class Main : MonoBehaviour
             recursionCurrentCell = recursionCurrentCell.Left;
             recursionDirections.Add("LEFT");
             recursionCellList.Add(recursionCurrentCell);
-            Debug.Log($"Now at {next}\n");
+            if (printDebugLines)
+                Debug.Log($"Now at {next}\n");
 
             //check to see if this is valid path so far
             validPathMovingWest = ValidPath(recursionCellList);
@@ -724,7 +736,8 @@ public class Main : MonoBehaviour
                             //unavailable and move back east
                             if (!recursionAtGoal)
                             {
-                                Debug.Log($"Left doesn't lead anywhere. Moving back right.\n");
+                                if (printDebugLines)
+                                    Debug.Log($"Left doesn't lead anywhere. Moving back right.\n");
                                 recursionCurrentCell.Valid = false;
                                 recursionCurrentCell = recursionCurrentCell.Right;
                                 recursionDirections.Remove(recursionDirections.Last());
@@ -746,7 +759,8 @@ public class Main : MonoBehaviour
                     recursionCellList.Remove(recursionCellList.Last());
                 }
 
-                Debug.Log($"Moving left lead to an invalid path. Going back right to {recursionCurrentCell}\n");
+                if (printDebugLines)
+                    Debug.Log($"Moving left lead to an invalid path. Going back right to {recursionCurrentCell}\n");
             }
         }
 
@@ -963,19 +977,15 @@ public class Main : MonoBehaviour
                 }
 
                 Logging("Pressed: " + selectedCell.ToString());
-                Debug.Log("fighting: " + fightingMonster);
-                Debug.Log("pressable: " + pressable);
 
                 switch (selectedCell.Tile)
                 {
                     case Tile.Orange:
-                        Debug.Log("orange");
                         SetSmell(Smell.Orange);
                         break;
                     case Tile.Blue:
                         if (currentSmell == Smell.Orange)
                         {
-                            Debug.Log("blue");
                             yield return SetPlayer(selectedCell, false, walkingTime);
                             //todo have a chomping noise play
                             Audio.PlaySoundAtTransform(audioClips[7].name, transform);
@@ -986,7 +996,6 @@ public class Main : MonoBehaviour
                         }
                         break;
                     case Tile.Purple:
-                        Debug.Log("purple");
 
                         string direction = playerCell.Up == selectedCell ? "up" :
                                            playerCell.Down == selectedCell ? "down" :
@@ -1032,8 +1041,6 @@ public class Main : MonoBehaviour
                         yield break;
 
                     case Tile.Green:
-                        Debug.Log("green");
-
                         yield return SetPlayer(selectedCell, false, walkingTime);
                         yield return HandleGreenTiles();
                         pressable = true;
