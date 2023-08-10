@@ -12,7 +12,6 @@ public class Main : MonoBehaviour
 {
     //todo tp
     //todo autosolve
-    //todo get rid of debug lines
     private KMBombInfo Bomb;
     private KMAudio Audio;
 
@@ -83,7 +82,9 @@ public class Main : MonoBehaviour
     private float maxHealth;
     private float currentPercentage;
     private bool printDebugLines = false;
-    
+    private bool spacePress;
+
+
 
 
     void Awake()
@@ -102,7 +103,8 @@ public class Main : MonoBehaviour
 
         resetButon = tempButtons[tempButtons.Length - 1];
 
-        resetButon.OnInteract += delegate () { if (pressable && !fightingMonster && !ModuleSolved) ResetModule(); return false; };
+        
+        resetButon.OnInteract += delegate () { if (pressable && !fightingMonster && !ModuleSolved) { resetButon.AddInteractionPunch(.1f); ResetModule(); } return false; };
 
 
         Cell.redMaterial = materials[0];
@@ -377,12 +379,10 @@ public class Main : MonoBehaviour
         {
             recursionCellListSimplified = SimplifyAnswer(recursionCellList);
             Logging($"Final Answer: " + LogList(recursionCellList));
-            if (recursionCellListSimplified.Count == recursionCellList.Count)
-            {
-                Logging($"Final Answer (Simplified): " + LogList(recursionCellListSimplified));
-            }
+            if (printDebugLines && recursionCellListSimplified.Count == recursionCellList.Count)
+                Debug.Log($"Final Answer (Simplified): " + LogList(recursionCellListSimplified));
 
-            if(printDebugLines)
+            if (printDebugLines)
                 Debug.Log($"#{ModuleId} {(recursionCellListSimplified.Count == recursionCellList.Count ? "Lists are the same" : "Lists are different")}");
         }
 
@@ -904,6 +904,7 @@ public class Main : MonoBehaviour
     }
     void ResetModule()
     {
+        Logging("Resetting module...");
         foreach (Cell c in grid)
         {
             c.HasPlayer = false;
@@ -1101,7 +1102,7 @@ public class Main : MonoBehaviour
 
     IEnumerator MoveBar()
     {
-        bool spacePress = false;
+        spacePress = false;
         float moveWhiteMaxTime = 1.25f;
         float elaspedTime;
 
@@ -1131,6 +1132,8 @@ public class Main : MonoBehaviour
             {
                 break;
             }
+
+
             elaspedTime = 0f;
             while (elaspedTime < moveWhiteMaxTime)
             {
@@ -1148,13 +1151,17 @@ public class Main : MonoBehaviour
 
         } while (!spacePress);
 
+        yield return SwingKnife();
+        yield return DepleteHealth(monsterHealth / maxHealth);
+    }
+
+    IEnumerator SwingKnife()
+    {
         animator.SetTrigger("Trigger Knife Swing");
         Audio.PlaySoundAtTransform(audioClips[0].name, transform);
         yield return new WaitForSeconds(audioClips[0].length);
 
         Audio.PlaySoundAtTransform(audioClips[4].name, transform);
-
-        //deplete health
 
         float[] greenHit = new float[] { -0.0881f, -0.0868f };
         float[] yellowHit = new float[] { -0.1159f, -0.0586f };
@@ -1174,8 +1181,11 @@ public class Main : MonoBehaviour
         {
             monsterHealth -= maxHealth / 4;
         }
+    }
 
-        float newPercentage = monsterHealth / maxHealth;
+    IEnumerator DepleteHealth(float newPercentage)
+    {
+        float elaspedTime;
 
         elaspedTime = 0f;
         float maxDepleteHealthTime = audioClips[4].length;
@@ -1264,16 +1274,76 @@ public class Main : MonoBehaviour
     }
 
 #pragma warning disable 414
-    private readonly string TwitchHelpMessage = @"Use !{0} to do something.";
+    private readonly string TwitchHelpMessage = @"Use `!{0} row col` to press the cell with `1 1` being top left. Use `!{0} reset` to reset the module. If you land on a green tile, the fighting will be done for you.";
 #pragma warning restore 414
 
     IEnumerator ProcessTwitchCommand(string Command)
     {
+        string[] commands = Command.ToUpper().Trim().Split(' ');
+
+        if (Command == "RESET")
+        {
+            resetButon.OnInteract();
+            yield break;
+        }
+
+        if(commands.Length != 2) 
+        {
+            yield return "sendtochaterror not enough or too many commands to select cell";
+        }
+
+        int row, col;
+
+        if (!int.TryParse(commands[0], out row) || !(row >=1 && row <= 6))
+        {
+            yield return $"sendtochaterror `{commands[0]}` is not a valid row";
+
+        }
+
+        if (!int.TryParse(commands[1], out col) || !(col >= 1 && col <= 8))
+        {
+            yield return $"sendtochaterror `{commands[0]}` is not a valid column";
+        }
+
+        row--;
+        col--;
+
+        KMSelectable button = buttons[row * 8 + col];
+        button.OnInteract();
+
+        if (GetCell(button).Tile == Tile.Green)
+        {
+            //wait for fight to be active
+            do
+            {
+                yield return new WaitForSeconds(.1f);
+            } while (!fightingGameObjects.activeSelf);
+
+            yield return HandleFighting();
+        }
+
+
         yield return null;
     }
 
     IEnumerator TwitchHandleForcedSolve()
     {
         yield return null;
+    }
+
+    IEnumerator HandleFighting()
+    {
+        do 
+        {
+            float barX = bar.transform.localPosition.x;
+            bool hitZone = barX >= -0.0881f && barX <= -0.0868f;
+
+            if (hitZone)
+            {
+                spacePress = true;
+                yield return null;
+            }
+
+        } while (!gridGameObject.activeSelf);
     }
 }
