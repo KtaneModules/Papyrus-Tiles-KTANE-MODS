@@ -9,19 +9,15 @@ using UnityEngine.UI;
 
 public class Main : MonoBehaviour
 {
-    //todo for green cells, have the player walk to the green cell
-    //todo fix the knife animation so it lasts as long as the audio
-    //todo add a blank animation sprite for the knife
     //todo reword the manual: once a green button is pressed the module will switch to fighting mode
     //todo add in the manual press space will cause an atack
     //todo add a reset button
-    //todo add the monster losing health
     //todo add the monster shaking when hit
     //todo add hit audio
-    //todo add health bar
     //todo add trigger for monster dying
     //todo add level up sound when monster dies and go back to grid
     //todo remove the line in the manual that says the monster health scales
+    //todo have a random monster spawn
 
 
     private KMBombInfo Bomb;
@@ -69,7 +65,7 @@ public class Main : MonoBehaviour
     private RectTransform rectTransform;
 
     [SerializeField]
-    private AudioClip[] audioClips; //knife, encounter 1, encounter 2
+    private AudioClip[] audioClips; //knife, encounter 1, encounter 2, love, hit
 
     private bool focused;
 
@@ -1021,7 +1017,6 @@ public class Main : MonoBehaviour
     }
     IEnumerator HandleGreenTiles()
     {
-        Debug.Log("handle green called");
         Vector3 heartPos = heart.transform.localPosition;
         exclamationPoint.transform.localPosition = new Vector3(heartPos.x, heartPos.y, heartPos.z + 0.00961666f);
         exclamationPoint.SetActive(true);
@@ -1039,7 +1034,7 @@ public class Main : MonoBehaviour
         for (int i = 0; i < 3; i++)
         {
             heart.SetActive(false);
-            yield return new WaitForSeconds(flashLength/2);
+            yield return new WaitForSeconds(flashLength / 2);
             heart.SetActive(true);
             yield return new WaitForSeconds(flashLength / 2);
         }
@@ -1053,7 +1048,7 @@ public class Main : MonoBehaviour
             yield return MoveBar();
 
         } while (monsterHealth > 0);
-
+        Audio.PlaySoundAtTransform(audioClips[3].name, transform);
         fightingMonster = false;
         fightingGameObjects.SetActive(false);
         gridGameObject.SetActive(true);
@@ -1110,6 +1105,9 @@ public class Main : MonoBehaviour
 
         animator.SetTrigger("Trigger Knife Swing");
         Audio.PlaySoundAtTransform(audioClips[0].name, transform);
+        yield return new WaitForSeconds(audioClips[0].length);
+
+        Audio.PlaySoundAtTransform(audioClips[4].name, transform);
 
         //deplete health
 
@@ -1135,7 +1133,7 @@ public class Main : MonoBehaviour
         float newPercentage = monsterHealth / maxHealth;
 
         elaspedTime = 0f;
-        float maxDepleteHealthTime = 1f;
+        float maxDepleteHealthTime = audioClips[4].length;
         while (elaspedTime < maxDepleteHealthTime)
         {
             float t = elaspedTime / maxDepleteHealthTime;

@@ -9037,8 +9037,9 @@ MonoBehaviour:
   currentHealthBar: {fileID: 114127931419185954}
   audioClips:
   - {fileID: 8300000, guid: ae860ac96ca394a448f337828ee41e29, type: 3}
-  - {fileID: 8300000, guid: ec21e518d1786f74b8438de845d64f0b, type: 3}
-  - {fileID: 8300000, guid: a63f7f994f60d02479d9a90602c36c37, type: 3}
+  - {fileID: 8300000, guid: 544741f0648911045abad77f950f300e, type: 3}
+  - {fileID: 8300000, guid: b93716eae089de64fb4e9fa248dada02, type: 3}
+  - {fileID: 8300000, guid: 7eb8cb1e497229d4a847c3270bd3cea3, type: 3}
 --- !u!114 &114481058883422902
 MonoBehaviour:
   m_ObjectHideFlags: 1
