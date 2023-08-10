@@ -1035,7 +1035,7 @@ public class Main : MonoBehaviour
                             yield return HandleGreenTiles();
                         }
 
-                        else if (currentCell.Col == 7)
+                        if (currentCell.Col == 7)
                         {
                             Solve();
                         }
