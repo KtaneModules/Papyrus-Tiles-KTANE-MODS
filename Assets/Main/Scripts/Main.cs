@@ -10,13 +10,11 @@ using System;
 
 public class Main : MonoBehaviour
 {
-    //todo reword the manual: once a green button is pressed the module will switch to fighting mode
-    //todo add in the manual press space will cause an atack
     //todo add a reset button
     //todo add the monster shaking when hit
-    //todo add level up sound when monster dies and go back to grid
     //todo remove the line in the manual that says the monster health scales
-    //todo have a random monster spawn
+    //todo reword the manual: once a green button is pressed the module will switch to fighting mode
+    //todo add in the manual press space will cause an atack
 
 
     private KMBombInfo Bomb;
@@ -69,6 +67,8 @@ public class Main : MonoBehaviour
     [SerializeField]
     private AudioClip[] audioClips; //knife, encounter 1, encounter 2, love, hit
 
+    private KMSelectable resetButon;
+
     private bool focused;
 
     private Smell currentSmell;
@@ -102,7 +102,14 @@ public class Main : MonoBehaviour
         ModuleId = ModuleIdCounter++;
 
         heart.SetActive(false);
-        buttons = GetComponent<KMSelectable>().Children;
+        KMSelectable[] tempButtons = GetComponent<KMSelectable>().Children;
+
+        buttons = Enumerable.Range(0, tempButtons.Length - 1).Select(i => tempButtons[i]).ToArray();
+
+        resetButon = tempButtons[tempButtons.Length - 1];
+
+        resetButon.OnInteract += delegate () { if (pressable && !fightingMonster) ResetModule(); return false; };
+
 
         Cell.redMaterial = materials[0];
         Cell.orangeMaterial = materials[1];
@@ -952,15 +959,19 @@ public class Main : MonoBehaviour
                 }
 
                 Logging("Pressed: " + selectedCell.ToString());
+                Debug.Log("fighting: " + fightingMonster);
+                Debug.Log("pressable: " + pressable);
+
                 switch (selectedCell.Tile)
                 {
                     case Tile.Orange:
+                        Debug.Log("orange");
                         SetSmell(Smell.Orange);
                         break;
                     case Tile.Blue:
                         if (currentSmell == Smell.Orange)
                         {
-
+                            Debug.Log("blue");
                             yield return SetPlayer(selectedCell, false, walkingTime);
                             //todo have a chomping noise play
                             Strike("Strike! Got bit by pirahnas. Moving back to " + playerCell.ToString());
@@ -970,6 +981,8 @@ public class Main : MonoBehaviour
                         }
                         break;
                     case Tile.Purple:
+                        Debug.Log("purple");
+
                         string direction = playerCell.Up == selectedCell ? "up" :
                                            playerCell.Down == selectedCell ? "down" :
                                            playerCell.Right == selectedCell ? "right" : "left";
@@ -1009,21 +1022,26 @@ public class Main : MonoBehaviour
                         yield break;
 
                     case Tile.Green:
+                        Debug.Log("green");
+
                         yield return SetPlayer(selectedCell, false, walkingTime);
                         yield return HandleGreenTiles();
-                        break;
+                        pressable = true;
+                        yield break;
                 }
+                yield return SetPlayer(selectedCell, false, walkingTime);
                 pressable = true;
             }
         }
     }
     IEnumerator HandleGreenTiles()
     {
+        fightingMonster = true;
         enemyRenderer.materials = new Material[] { enemyMaterials[Rnd.Range(0, enemyMaterials.Length)] };
+        currentHealthBar.rectTransform.anchorMax = new Vector2(1, 1);
         Vector3 heartPos = heart.transform.localPosition;
         exclamationPoint.transform.localPosition = new Vector3(heartPos.x, heartPos.y, heartPos.z + 0.00961666f);
         exclamationPoint.SetActive(true);
-        fightingMonster = true;
         monsterHealth = 9;
         maxHealth = 9;
         currentPercentage = 1f;
@@ -1055,6 +1073,7 @@ public class Main : MonoBehaviour
         fightingMonster = false;
         fightingGameObjects.SetActive(false);
         gridGameObject.SetActive(true);
+        fightingMonster = false;
     }
 
     IEnumerator MoveBar()
