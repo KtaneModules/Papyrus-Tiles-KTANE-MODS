@@ -12,6 +12,7 @@ public class Main : MonoBehaviour
 {
     //todo tp
     //todo autosolve
+    //todo colorblind
     private KMBombInfo Bomb;
     private KMAudio Audio;
 

@@ -389,6 +389,21 @@ Prefab:
       propertyPath: audioClips.Array.data[7]
       value: 
       objectReference: {fileID: 8300000, guid: 1a43fadd01c0057449e9c59138c0c56c, type: 3}
+    - target: {fileID: 114853960920223876, guid: 1c2208c64e22bca478f824b6c4943b7d,
+        type: 2}
+      propertyPath: ModuleDisplayName
+      value: Papyrus Tiles
+      objectReference: {fileID: 0}
+    - target: {fileID: 114853960920223876, guid: 1c2208c64e22bca478f824b6c4943b7d,
+        type: 2}
+      propertyPath: ModuleType
+      value: PapyrusTiles
+      objectReference: {fileID: 0}
+    - target: {fileID: 114853960920223876, guid: 1c2208c64e22bca478f824b6c4943b7d,
+        type: 2}
+      propertyPath: RequiresTimerVisibility
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 1c2208c64e22bca478f824b6c4943b7d, type: 2}
   m_IsPrefabParent: 0
