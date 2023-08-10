@@ -9,56 +9,81 @@ using Rnd = UnityEngine.Random;
 using System.Reflection;
 using NUnit.Framework.Constraints;
 using System.Xml;
+using static System.Runtime.CompilerServices.RuntimeHelpers;
 
 public class Main : MonoBehaviour
 {
+    //todo for green cells, have the player walk to the green cell
+    //todo fix the knife animation so it lasts as long as the audio
+    //todo add a blank animation sprite for the knife
+    //todo reword the manual: once a green button is pressed the module will switch to fighting mode
+    //todo add in the manual press space will cause an atack
+    //todo add a reset button
+    //todo add the monster losing health
+    //todo add the monster shaking when hit
+    private KMBombInfo Bomb;
+    private KMAudio Audio;
 
-    public KMBombInfo Bomb;
-    public KMAudio Audio;
+    private Cell[,] grid;
 
-    Cell[,] grid;
-
-    KMSelectable[] buttons;
-
-    [SerializeField]
-    Material[] materials; // red, orange, green, blue, purple, pink
-
-    [SerializeField]
-    GameObject orange;
-
-    [SerializeField]
-    GameObject lemon;
+    private KMSelectable[] buttons;
 
     [SerializeField]
-    GameObject heart;
+    private Animator animator;
 
     [SerializeField]
-    GameObject gridGameObject;
+    private SpriteRenderer spriteRenderer;
 
     [SerializeField]
-    Material[] enemyMaterials;
+    private Material[] materials; // red, orange, green, blue, purple, pink
 
-    Smell currentSmell;
+    [SerializeField]
+    private GameObject orange;
 
-    bool recursionAtGoal;
+    [SerializeField]
+    private GameObject lemon;
+
+    [SerializeField]
+    private GameObject heart;
+
+    [SerializeField]
+    private GameObject gridGameObject;
+
+    [SerializeField]
+    private GameObject fightingGameObjects;
+
+    [SerializeField]
+    private Material[] enemyMaterials;
+
+    [SerializeField]
+    private GameObject bar;
+
+    [SerializeField]
+    private AudioClip knifeAudio;
+
+    private bool focused;
+
+    private Smell currentSmell;
+
+    private bool recursionAtGoal;
     private Cell recursionCurrentCell;
     private List<Cell> recursionCellList;
     private List<Cell> recursionCellListSimplified;
 
-
-    List<string> recursionDirections;
+    private List<string> recursionDirections;
 
     static int ModuleIdCounter = 1;
-    int ModuleId;
+    private int ModuleId;
     private bool ModuleSolved;
-    bool debug = false;
+    private bool debug = false;
     private bool pressable;
     private bool fightingMonster;
 
 
     void Awake()
     {
-
+        Bomb = GetComponent<KMBombInfo>();
+        Audio = GetComponent<KMAudio>();
         ModuleSolved = false;
         ModuleId = ModuleIdCounter++;
 
@@ -71,6 +96,9 @@ public class Main : MonoBehaviour
         Cell.blueMaterial = materials[3];
         Cell.purpleMaterial = materials[4];
         Cell.pinkMaterial = materials[5];
+
+        GetComponent<KMSelectable>().OnFocus += delegate () { focused = true; };
+        GetComponent<KMSelectable>().OnDefocus += delegate () { focused = false; };
 
         grid = new Cell[6, 8];
         if (!debug)
@@ -121,7 +149,6 @@ public class Main : MonoBehaviour
         }
 
         SetSmell(Smell.None);
-
     }
 
     bool GenerateMaze()
@@ -882,6 +909,11 @@ public class Main : MonoBehaviour
                 Logging("Pressed " + selectedCell.ToString());
                 heart.SetActive(true);
                 yield return SetPlayer(selectedCell, true, walkingTime);
+
+                if (selectedCell.Tile == Tile.Green)
+                {
+                    HandleGreenTiles();
+                }
                 pressable = true;
             }
         }
@@ -929,7 +961,7 @@ public class Main : MonoBehaviour
                         //                   playerCell.Right == selectedCell ? "right" : "left";
 
                         //Cell currentCell = playerCell;
-                        
+
                         //do
                         //{
                         //    Cell nextCell = direction == "up" ? currentCell.Up :
@@ -957,7 +989,7 @@ public class Main : MonoBehaviour
 
                         //else if (currentCell.Tile == Tile.Green)
                         //{
-                        //    //todo add code for monster fighting
+                        //    HandleGreenTiles();
                         //}
                         //pressable = true;
                         //yield break;
@@ -973,14 +1005,69 @@ public class Main : MonoBehaviour
             }
         }
     }
-
     void HandleGreenTiles()
     {
+        gridGameObject.SetActive(false);
+        //todo play sound of fight encounter
+        fightingGameObjects.SetActive(true);
 
+        StartCoroutine(MoveBar());
+    }
+
+    IEnumerator MoveBar()
+    {
+        bool spacePress = false;
+        float maxTime = 1.25f;
+
+        Vector3 leftPos = new Vector3(-0.1674f, -0.0633f, 0.0541f);
+        Vector3 rightPos = new Vector3(-0.0079f, -0.0633f, 0.0541f);
+        bar.transform.localPosition = leftPos;
+        do
+        {
+            float elaspedTime = 0f;
+            while (elaspedTime < maxTime)
+            {
+                if (focused && Input.GetKeyDown(KeyCode.Space))
+                {
+                    spacePress = true;
+                    break;
+                }
+
+                float t = elaspedTime / maxTime;
+                bar.transform.localPosition = Vector3.Lerp(leftPos, rightPos, t);
+                elaspedTime += Time.deltaTime;
+                yield return null;
+            }
+
+            if (spacePress)
+            {
+                break;
+            }
+            elaspedTime = 0f;
+            while (elaspedTime < maxTime)
+            {
+                if (focused && Input.GetKeyDown(KeyCode.Space))
+                {
+                    spacePress = true;
+                    break;
+                }
+
+                float t = elaspedTime / maxTime;
+                bar.transform.localPosition = Vector3.Lerp(rightPos, leftPos, t);
+                elaspedTime += Time.deltaTime;
+                yield return null;
+            }
+
+        } while (!spacePress);
+
+        animator.SetTrigger("Trigger Knife Swing");
+        Audio.PlaySoundAtTransform(knifeAudio.name, transform);
     }
 
     void Start()
     {
+        gridGameObject.SetActive(true);
+        fightingGameObjects.SetActive(false);
         pressable = true;
         fightingMonster = false;
     }
