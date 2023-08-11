@@ -1048,6 +1048,10 @@ public class Main : MonoBehaviour
                         yield return SetPlayer(selectedCell, false, walkingTime);
                         yield return HandleGreenTiles();
                         pressable = true;
+                        if (FindPlayer().Col == 7)
+                        {
+                            Solve();
+                        }
                         yield break;
                 }
                 yield return SetPlayer(selectedCell, false, walkingTime);
