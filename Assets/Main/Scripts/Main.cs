@@ -10,6 +10,7 @@ using System;
 
 public class Main : MonoBehaviour
 {
+    //todo figure out why positioning is not working in game
     //todo tp
     //todo autosolve
     //todo colorblind
@@ -303,14 +304,15 @@ public class Main : MonoBehaviour
             if (c.HasPlayer)
             {
                 c.HasPlayer = false;
+                break;
             }
         }
         
         currentCell.HasPlayer = true;
         float elaspedTime = 0f;
 
-        Vector3 finalDestiantion = currentCell.Button.transform.position;
-        Vector3 oldHeartPosition = heart.transform.position;
+        Vector3 finalDestiantion = currentCell.Button.transform.localPosition;
+        Vector3 oldHeartPosition = heart.transform.localPosition;
         
         if (!firstPress)
         {
@@ -322,7 +324,7 @@ public class Main : MonoBehaviour
             {
                 float t = elaspedTime / maxTime;
                 Vector3 newPos = Vector3.Lerp(oldHeartPosition, finalDestiantion, t);
-                heart.transform.position = new Vector3(newPos.x, oldHeartPosition.y, newPos.z);
+                heart.transform.localPosition = new Vector3(newPos.x, oldHeartPosition.y, newPos.z);
                 elaspedTime += Time.deltaTime;
                 yield return null;
             }
@@ -330,7 +332,7 @@ public class Main : MonoBehaviour
 
         else
         {
-            heart.transform.position = new Vector3(finalDestiantion.x, oldHeartPosition.y, finalDestiantion.z);
+            heart.transform.localPosition = new Vector3(finalDestiantion.x, oldHeartPosition.y, finalDestiantion.z);
         }  
     }
 
