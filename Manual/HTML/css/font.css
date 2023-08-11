@@ -129,34 +129,23 @@
     src: url(../font/KR_A_Round.ttf);
 }
 
-/* Shikaku */
+/* Complexity */
 @font-face {
-    font-family: 'Shikaku';
-    src: url('../font/Shikaku.ttf');
+    font-family: 'complexbase';
+    font-style: normal;
+    src: url(../font/complexbase.ttf);
 }
 
-/* Heiroglyphics */
+/* The Fuse Box */
 @font-face {
-    font-family: 'Heiroglyphics';
+    font-family: 'Caveat';
+    src: url('../font/Caveat.ttf');
+}
+
+/* Hieroglyphics */
+@font-face {
+    font-family: 'Hieroglyphics';
     src: url('../font/hieroglyphics.ttf');
-}
-
-/* Spinning Buttons */
-@font-face {
-    font-family: 'cyrillic';
-    src: url('../font/cyrillic.ttf');
-}
-
-/* Shapes And Bombs */
-@font-face {
-    font-family: 'Handwritten';
-    src: url('../font/Handwritten.ttf');
-}
-
-/* SYNC-125 [3] */
-@font-face {
-    font-family: 'SCP';
-    src: url('../font/scp-v01.ttf');
 }
 
 /* The Necronomicon */
@@ -165,11 +154,40 @@
     src: url('../font/Rlyehian.ttf');
 }
 
-/* Complexity */
+/* Rotary Encoder */
 @font-face {
-    font-family: 'complexbase';
-    font-style: normal;
-    src: url(../font/complexbase.ttf);
+    font-family: "Primitiva";
+    src: url('../font/Primitiva.ttf');
+}
+
+/* Shapes And Bombs */
+@font-face {
+    font-family: 'Handwritten';
+    src: url('../font/Handwritten.ttf');
+}
+
+/* Shikaku */
+@font-face {
+    font-family: 'Shikaku';
+    src: url('../font/Shikaku.ttf');
+}
+
+/* Spinning Buttons */
+@font-face {
+    font-family: 'cyrillic';
+    src: url('../font/cyrillic.ttf');
+}
+
+/* Stroop's Test */
+@font-face {
+    font-family: 'ArchivoNarrow';
+    src: local('ArchivoNarrow'), url(../font/ArchivoNarrow.ttf);
+}
+
+/* SYNC-125 [3] */
+@font-face {
+    font-family: 'SCP';
+    src: url('../font/scp-v01.ttf');
 }
 
 /* Twisty Terminals */
@@ -177,6 +195,12 @@
     font-family: 'BPtypewriteDamaged';
     font-style: normal;
     src: url(../font/BPtypewriteDamaged.otf);
+}
+
+/* Who's on Trunic */
+@font-face {
+    font-family: 'Trunic';
+    src: url('../font/Trunic.otf');
 }
 
 /*** LOGFILE ANALYZER ***/
@@ -238,7 +262,10 @@
     src: url(../font/SGA.ttf);
 }
 
-
+@font-face { font-family: 'Alef'; font-weight: normal; font-style: normal; src: url('fonts/Alef-Regular.ttf') format('truetype'); }
+@font-face { font-family: 'Alef'; font-weight: bold;   font-style: normal; src: url('fonts/Alef-Bold.ttf') format('truetype'); }
+@font-face { font-family: 'Ariarg'; font-weight: normal; font-style: normal; src: url('fonts/Ariarg.ttf') format('truetype'); }
+@font-face { font-family: 'Ariarg'; font-weight: bold;   font-style: normal; src: url('fonts/Ariarg.ttf') format('truetype'); }
 
 @font-face {
     font-family: "Arrows";
@@ -484,4 +511,18 @@
 @font-face {
     font-family: 'Roboto Mono';
     src: url('../font/RobotoMono-VariableFont_wght.ttf');
+}
+
+@font-face {
+    font-family: "Yu Gothic";
+    font-weight: normal;
+    font-style: normal;
+    src: local("Yu Gothic Medium"), url(font/YuGothic-Medium.ttf);
+}
+
+@font-face {
+    font-family: "Yu Gothic";
+    font-weight: bold;
+    font-style: normal;
+    src: local("Yu Gothic"), url(font/YuGothic-Bold.ttf);
 }

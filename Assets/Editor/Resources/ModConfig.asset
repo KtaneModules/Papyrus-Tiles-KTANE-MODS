@@ -14,7 +14,7 @@ MonoBehaviour:
   id: PapyrusTiles
   title: Papyrus Tiles
   author: Hawker
-  description: Humor papyrus by solving one of his puzzles
+  description: Humor Papyrus by solving one of his puzzles
   version: 1.0
   outputFolder: build
   previewImage: {fileID: 2800000, guid: 8fbc7c536479ac046808957abc16b049, type: 3}
