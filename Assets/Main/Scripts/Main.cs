@@ -311,7 +311,7 @@ public class Main : MonoBehaviour
         currentCell.HasPlayer = true;
         float elaspedTime = 0f;
 
-        Vector3 finalDestiantion = currentCell.Button.transform.localPosition;
+        Vector3 finalDestination = currentCell.Button.transform.localPosition;
         Vector3 oldHeartPosition = heart.transform.localPosition;
         
         if (!firstPress)
@@ -323,7 +323,7 @@ public class Main : MonoBehaviour
             while (elaspedTime < maxTime)
             {
                 float t = elaspedTime / maxTime;
-                Vector3 newPos = Vector3.Lerp(oldHeartPosition, finalDestiantion, t);
+                Vector3 newPos = Vector3.Lerp(oldHeartPosition, finalDestination, t);
                 heart.transform.localPosition = new Vector3(newPos.x, oldHeartPosition.y, newPos.z);
                 elaspedTime += Time.deltaTime;
                 yield return null;
@@ -332,7 +332,7 @@ public class Main : MonoBehaviour
 
         else
         {
-            heart.transform.localPosition = new Vector3(finalDestiantion.x, oldHeartPosition.y, finalDestiantion.z);
+            heart.transform.localPosition = new Vector3(finalDestination.x, oldHeartPosition.y, finalDestination.z);
         }  
     }
 
@@ -378,22 +378,7 @@ public class Main : MonoBehaviour
             }
         }
 
-        if (foundPath)
-        {
-            recursionCellListSimplified = SimplifyAnswer(recursionCellList);
-            Logging($"Final Answer: " + LogList(recursionCellList));
-            if (printDebugLines && recursionCellListSimplified.Count == recursionCellList.Count)
-                Debug.Log($"Final Answer (Simplified): " + LogList(recursionCellListSimplified));
-
-            if (printDebugLines)
-                Debug.Log($"#{ModuleId} {(recursionCellListSimplified.Count == recursionCellList.Count ? "Lists are the same" : "Lists are different")}");
-        }
-
-        else
-        {
-            if(printDebugLines)
-                Debug.Log("Couldn't find a path to complete this maze");
-        }
+        recursionCellListSimplified = SimplifyAnswer(recursionCellList);
     }
 
     bool FindPathRecursion(Cell start, Cell end)
@@ -1213,6 +1198,8 @@ public class Main : MonoBehaviour
         fightingGameObjects.SetActive(false);
         pressable = true;
         fightingMonster = false;
+        LogGrid();
+        Logging($"Final Answer: " + LogList(recursionCellList));
     }
 
     void Update()
@@ -1276,6 +1263,23 @@ public class Main : MonoBehaviour
     private void Strike(string s)
     {
         GetComponent<KMBombModule>().HandleStrike();
+        Logging(s);
+    }
+
+    private void LogGrid()
+    {
+        string s = "";
+
+        for (int row = 0; row < 6; row++)
+        {
+            for (int col = 0; col < 8; col++)
+            {
+                s += grid[row, col].GetColor() == "Pink" ? "I " : grid[row, col].GetColor()[0] + " ";
+            }
+
+            s += "\n";
+        }
+
         Logging(s);
     }
 
