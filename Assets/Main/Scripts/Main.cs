@@ -77,13 +77,13 @@ public class Main : MonoBehaviour
     static int ModuleIdCounter = 1;
     private int ModuleId;
     private bool ModuleSolved;
-    private bool debug = false;
+    private bool debug = true;
     private bool pressable;
     private bool fightingMonster;
     private float monsterHealth;
     private float maxHealth;
     private float currentPercentage;
-    private bool printDebugLines = false;
+    private bool printDebugLines = true;
     private bool spacePress;
 
 
@@ -198,75 +198,26 @@ public class Main : MonoBehaviour
 
     void GenerateDebugMaze()
     {
-        int[,] grid1 = new int[,]
-        {
-            { 2, 5, 0, 1, 0, 3, 0, 3},
-            { 5, 1, 4, 4, 4, 4, 3, 2},
-            { 5, 2, 2, 5, 5, 1, 2, 2},
-            { 0, 3, 1, 3, 4, 4, 0, 5},
-            { 0, 1, 4, 3, 2, 3, 1, 3},
-            { 0, 2, 1, 1, 5, 5, 2, 0},
-        };
 
-        int[,] grid2 = new int[,]
+        int[,] grid = new int[,]
         {
-            { 0, 3, 3, 0, 3, 2, 3, 5},
-            {1, 5, 5, 5, 3, 0, 2, 1},
-            { 0, 0, 2, 2, 4, 2, 3, 5},
-            { 0, 2, 2, 1, 1, 3, 2, 0},
-            { 3, 3, 1, 5, 4, 3, 4, 1},
-            { 1, 1, 2, 1, 2, 0, 1, 2},
-        };
-
-        int[,] grid3 = new int[,]
-        {
-            { 1, 0, 0, 1, 3, 0, 5, 2},
-            { 1, 4, 3, 3, 1, 5, 4, 3},
-            { 2, 3, 1, 0, 2, 4, 0, 1},
-            { 0, 5, 4, 4, 0, 1, 0, 2},
-            { 5, 2, 3, 1, 0, 5, 2, 5},
-            { 0, 5, 2, 2, 1, 1, 2, 4},
-        };
-
-        int[,] grid4 = new int[,]
-        {
-            { 3, 0, 1, 5, 0, 1, 1, 3},
-            { 1, 4, 5, 3, 4, 4, 1, 2},
-            { 5, 1, 4, 2, 2, 2, 2, 3},
-            { 3, 0, 3, 4, 0, 2, 4, 5},
-            { 2, 3, 0, 2, 2, 2, 4, 3},
-            { 2, 3, 0, 1, 1, 2, 1, 5},
-        };
-
-        int[,] grid5 = new int[,]
-        {
-            { 1, 1, 1, 5, 1, 5, 0, 3},
-            { 5, 2, 1, 3, 1, 4, 2, 0},
-            { 3, 3, 1, 1, 2, 4, 4, 3},
-            { 1, 1, 5, 2, 0, 3, 3, 2},
-            { 3, 0, 0, 1, 4, 0, 4, 5},
-            { 3, 5, 2, 0, 3, 3, 2, 3},
-        };
-
-        int[,] grid6 = new int[,]
-        {
-        { 1, 2, 2, 2, 1, 0, 1, 5},
-        { 2, 5, 0, 5, 1, 4, 1, 5},
-        { 1, 2, 1, 2, 5, 4, 4, 3},
-        { 5, 0, 5, 3, 4, 3, 4, 5},
-        { 2, 1, 3, 5, 4, 5, 4, 2},
-        { 0, 1, 2, 0, 2, 1, 2, 0},
+        { 0, 1, 3, 1, 1, 1, 0, 0 },
+        { 5, 4, 5, 0, 0, 2, 1, 1 },
+        { 0, 3, 0, 3, 5, 1, 5, 1},
+        { 3, 3, 0, 5, 0, 1, 3, 2},
+        { 2, 0, 0, 5, 0, 4, 5, 5},
+        { 0, 1, 3, 3, 2, 5, 3, 1} 
         };
 
         /*
         int[,] grid2 = new int[,]
         {
-        { , , , , , , , },
-        { , , , , , , , },
-        { , , , , , , , },
-        { , , , , , , , },
-        { , , , , , , , },
-        { , , , , , , , },
+        { , , , , , , , , },
+        { , , , , , , , , },
+        { , , , , , , , , },
+        { , , , , , , , , },
+        { , , , , , , , , },
+        { , , , , , , , , },
 
         };*/
 
@@ -275,7 +226,7 @@ public class Main : MonoBehaviour
             for (int col = 0; col < 8; col++)
             {
                 int index = row * 8 + col;
-                grid[row, col] = new Cell(row, col, buttons[index], (Tile)grid6[row, col]);
+                this.grid[row, col] = new Cell(row, col, buttons[index], (Tile)grid[row, col]);
             }
         }
 
@@ -417,6 +368,8 @@ public class Main : MonoBehaviour
         if (printDebugLines)
             Debug.Log($"Attempting to move up to {next}\n");
 
+
+
         bool validPathMovingNorth = false;
         bool checkValidity = false;
         if (next != null && (recursionDirections.Count == 0 || recursionDirections.Last() != "DOWN") && next.Valid && UnVistedNonPurpleCell(next))
@@ -426,6 +379,7 @@ public class Main : MonoBehaviour
             recursionCellList.Add(recursionCurrentCell);
             if (printDebugLines)
                 Debug.Log($"Now at {next}\n");
+            Debug.Log("Recursion direcions: " + string.Join(", ", recursionDirections.Select(x => x.ToString()).ToArray()));
 
             //check to see if this is valid path so far
             validPathMovingNorth = ValidPath(recursionCellList);
@@ -468,8 +422,10 @@ public class Main : MonoBehaviour
                                     Debug.Log($"Up doesn't lead anywhere. Moving back down.\n");
                                 recursionCurrentCell.Valid = false;
                                 recursionCurrentCell = recursionCurrentCell.Down;
-                                recursionDirections.Remove(recursionDirections.Last());
-                                recursionCellList.Remove(recursionCellList.Last());
+                                recursionDirections.RemoveAt(recursionDirections.Count - 1);
+                                recursionCellList.RemoveAt(recursionCellList.Count - 1);
+                                Debug.Log("Recursion direcions: " + string.Join(", ", recursionDirections.Select(x => x.ToString()).ToArray()));
+
                             }
                         }
                     }
@@ -483,8 +439,8 @@ public class Main : MonoBehaviour
                 {
                     recursionAtGoal = false;
                     recursionCurrentCell = recursionCurrentCell.Down;
-                    recursionDirections.Remove(recursionDirections.Last());
-                    recursionCellList.Remove(recursionCellList.Last());
+                    recursionDirections.RemoveAt(recursionDirections.Count - 1);
+                    recursionCellList.RemoveAt(recursionCellList.Count - 1);
                 }
 
                 if (printDebugLines)
@@ -513,6 +469,7 @@ public class Main : MonoBehaviour
             recursionCellList.Add(recursionCurrentCell);
             if (printDebugLines)
                 Debug.Log($"Now at {next}\n");
+            Debug.Log("Recursion direcions: " + string.Join(", ", recursionDirections.Select(x => x.ToString()).ToArray()));
 
             //check to see if this is valid path so far
             validPathMovingEast = ValidPath(recursionCellList);
@@ -554,10 +511,13 @@ public class Main : MonoBehaviour
                             {
                                 if (printDebugLines)
                                     Debug.Log($"Right doesn't lead anywhere. Moving back Left.\n");
+
                                 recursionCurrentCell.Valid = false;
                                 recursionCurrentCell = recursionCurrentCell.Left;
-                                recursionDirections.Remove(recursionDirections.Last());
-                                recursionCellList.Remove(recursionCellList.Last());
+                                recursionDirections.RemoveAt(recursionDirections.Count - 1);
+                                recursionCellList.RemoveAt(recursionCellList.Count - 1);
+                                Debug.Log("Recursion direcions: " + string.Join(", ", recursionDirections.Select(x => x.ToString()).ToArray()));
+
                             }
                         }
                     }
@@ -571,8 +531,8 @@ public class Main : MonoBehaviour
                 {
                     recursionAtGoal = false;
                     recursionCurrentCell = recursionCurrentCell.Left;
-                    recursionDirections.Remove(recursionDirections.Last());
-                    recursionCellList.Remove(recursionCellList.Last());
+                    recursionDirections.RemoveAt(recursionDirections.Count - 1);
+                    recursionCellList.RemoveAt(recursionCellList.Count - 1);
                 }
 
                 if (printDebugLines)
@@ -589,9 +549,9 @@ public class Main : MonoBehaviour
         Cell next = recursionCurrentCell.Down;
         if (printDebugLines)
             Debug.Log($"Attempting to move down to {next}\n");
+
         bool validPathMovingSouth = false;
         bool checkValidity = false;
-
 
         if (next != null && (recursionDirections.Count == 0 || recursionDirections.Last() != "UP") && next.Valid && UnVistedNonPurpleCell(next))
         {
@@ -600,6 +560,7 @@ public class Main : MonoBehaviour
             recursionCellList.Add(recursionCurrentCell);
             if (printDebugLines)
                 Debug.Log($"Now at {next}\n");
+            Debug.Log("Recursion direcions: " + string.Join(", ", recursionDirections.Select(x => x.ToString()).ToArray()));
 
             //check to see if this is valid path so far
             validPathMovingSouth = ValidPath(recursionCellList);
@@ -640,10 +601,13 @@ public class Main : MonoBehaviour
                             {
                                 if (printDebugLines)
                                     Debug.Log($"Down doesn't lead anywhere. Moving back up.\n");
+
                                 recursionCurrentCell.Valid = false;
                                 recursionCurrentCell = recursionCurrentCell.Up;
-                                recursionDirections.Remove(recursionDirections.Last());
-                                recursionCellList.Remove(recursionCellList.Last());
+                                recursionDirections.RemoveAt(recursionDirections.Count - 1);
+                                recursionCellList.RemoveAt(recursionCellList.Count - 1);
+                                Debug.Log("Recursion direcions: " + string.Join(", ", recursionDirections.Select(x => x.ToString()).ToArray()));
+
                             }
                         }
                     }
@@ -657,8 +621,8 @@ public class Main : MonoBehaviour
                 {
                     recursionAtGoal = false;
                     recursionCurrentCell = recursionCurrentCell.Up;
-                    recursionDirections.Remove(recursionDirections.Last());
-                    recursionCellList.Remove(recursionCellList.Last());
+                    recursionDirections.RemoveAt(recursionDirections.Count - 1);
+                    recursionCellList.RemoveAt(recursionCellList.Count - 1);
                 }
 
                 if (printDebugLines)
@@ -676,9 +640,9 @@ public class Main : MonoBehaviour
 
         if (printDebugLines)
             Debug.Log($"Attempting to move left to {next}\n");
+
         bool validPathMovingWest = false;
         bool checkValidity = false;
-
         if (next != null && (recursionDirections.Count == 0 || recursionDirections.Last() != "RIGHT") && next.Valid && UnVistedNonPurpleCell(next))
         {
             recursionCurrentCell = recursionCurrentCell.Left;
@@ -686,6 +650,7 @@ public class Main : MonoBehaviour
             recursionCellList.Add(recursionCurrentCell);
             if (printDebugLines)
                 Debug.Log($"Now at {next}\n");
+            Debug.Log("Recursion direcions: " + string.Join(", ", recursionDirections.Select(x => x.ToString()).ToArray()));
 
             //check to see if this is valid path so far
             validPathMovingWest = ValidPath(recursionCellList);
@@ -726,10 +691,13 @@ public class Main : MonoBehaviour
                             {
                                 if (printDebugLines)
                                     Debug.Log($"Left doesn't lead anywhere. Moving back right.\n");
+
                                 recursionCurrentCell.Valid = false;
                                 recursionCurrentCell = recursionCurrentCell.Right;
-                                recursionDirections.Remove(recursionDirections.Last());
-                                recursionCellList.Remove(recursionCellList.Last());
+                                recursionDirections.RemoveAt(recursionDirections.Count - 1);
+                                recursionCellList.RemoveAt(recursionCellList.Count - 1);
+                                Debug.Log("Recursion direcions: " + string.Join(", ", recursionDirections.Select(x => x.ToString()).ToArray()));
+
                             }
                         }
                     }
@@ -743,8 +711,8 @@ public class Main : MonoBehaviour
                 {
                     recursionAtGoal = false;
                     recursionCurrentCell = recursionCurrentCell.Right;
-                    recursionDirections.Remove(recursionDirections.Last());
-                    recursionCellList.Remove(recursionCellList.Last());
+                    recursionDirections.RemoveAt(recursionDirections.Count - 1);
+                    recursionCellList.RemoveAt(recursionCellList.Count - 1);
                 }
 
                 if (printDebugLines)
