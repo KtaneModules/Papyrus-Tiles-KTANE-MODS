@@ -10,7 +10,6 @@ using System;
 
 public class Main : MonoBehaviour
 {
-    //todo figure out why positioning is not working in game
     //todo tp
     //todo autosolve
     //todo colorblind
@@ -77,13 +76,13 @@ public class Main : MonoBehaviour
     static int ModuleIdCounter = 1;
     private int ModuleId;
     private bool ModuleSolved;
-    private bool debug = true;
+    private bool debug = false;
     private bool pressable;
     private bool fightingMonster;
     private float monsterHealth;
     private float maxHealth;
     private float currentPercentage;
-    private bool printDebugLines = true;
+    private bool printDebugLines = false;
     private bool spacePress;
 
 
@@ -379,7 +378,6 @@ public class Main : MonoBehaviour
             recursionCellList.Add(recursionCurrentCell);
             if (printDebugLines)
                 Debug.Log($"Now at {next}\n");
-            Debug.Log("Recursion direcions: " + string.Join(", ", recursionDirections.Select(x => x.ToString()).ToArray()));
 
             //check to see if this is valid path so far
             validPathMovingNorth = ValidPath(recursionCellList);
@@ -424,8 +422,6 @@ public class Main : MonoBehaviour
                                 recursionCurrentCell = recursionCurrentCell.Down;
                                 recursionDirections.RemoveAt(recursionDirections.Count - 1);
                                 recursionCellList.RemoveAt(recursionCellList.Count - 1);
-                                Debug.Log("Recursion direcions: " + string.Join(", ", recursionDirections.Select(x => x.ToString()).ToArray()));
-
                             }
                         }
                     }
@@ -469,7 +465,6 @@ public class Main : MonoBehaviour
             recursionCellList.Add(recursionCurrentCell);
             if (printDebugLines)
                 Debug.Log($"Now at {next}\n");
-            Debug.Log("Recursion direcions: " + string.Join(", ", recursionDirections.Select(x => x.ToString()).ToArray()));
 
             //check to see if this is valid path so far
             validPathMovingEast = ValidPath(recursionCellList);
@@ -516,8 +511,6 @@ public class Main : MonoBehaviour
                                 recursionCurrentCell = recursionCurrentCell.Left;
                                 recursionDirections.RemoveAt(recursionDirections.Count - 1);
                                 recursionCellList.RemoveAt(recursionCellList.Count - 1);
-                                Debug.Log("Recursion direcions: " + string.Join(", ", recursionDirections.Select(x => x.ToString()).ToArray()));
-
                             }
                         }
                     }
@@ -560,8 +553,6 @@ public class Main : MonoBehaviour
             recursionCellList.Add(recursionCurrentCell);
             if (printDebugLines)
                 Debug.Log($"Now at {next}\n");
-            Debug.Log("Recursion direcions: " + string.Join(", ", recursionDirections.Select(x => x.ToString()).ToArray()));
-
             //check to see if this is valid path so far
             validPathMovingSouth = ValidPath(recursionCellList);
             checkValidity = true;
@@ -606,8 +597,6 @@ public class Main : MonoBehaviour
                                 recursionCurrentCell = recursionCurrentCell.Up;
                                 recursionDirections.RemoveAt(recursionDirections.Count - 1);
                                 recursionCellList.RemoveAt(recursionCellList.Count - 1);
-                                Debug.Log("Recursion direcions: " + string.Join(", ", recursionDirections.Select(x => x.ToString()).ToArray()));
-
                             }
                         }
                     }
@@ -650,8 +639,6 @@ public class Main : MonoBehaviour
             recursionCellList.Add(recursionCurrentCell);
             if (printDebugLines)
                 Debug.Log($"Now at {next}\n");
-            Debug.Log("Recursion direcions: " + string.Join(", ", recursionDirections.Select(x => x.ToString()).ToArray()));
-
             //check to see if this is valid path so far
             validPathMovingWest = ValidPath(recursionCellList);
             checkValidity = true;
@@ -696,8 +683,6 @@ public class Main : MonoBehaviour
                                 recursionCurrentCell = recursionCurrentCell.Right;
                                 recursionDirections.RemoveAt(recursionDirections.Count - 1);
                                 recursionCellList.RemoveAt(recursionCellList.Count - 1);
-                                Debug.Log("Recursion direcions: " + string.Join(", ", recursionDirections.Select(x => x.ToString()).ToArray()));
-
                             }
                         }
                     }
