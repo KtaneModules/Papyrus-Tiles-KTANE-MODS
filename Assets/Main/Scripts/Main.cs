@@ -1008,7 +1008,7 @@ public class Main : MonoBehaviour
 
                         if (currentCell.Tile == Tile.Red)
                         {
-                            Strike("Strike! Slid to a red tile. Restarting module...");
+                            Strike("Strike! Slid to a red tile.");
                             ResetModule();
                         }
 
@@ -1269,7 +1269,6 @@ public class Main : MonoBehaviour
     private void LogGrid()
     {
         string s = "";
-
         for (int row = 0; row < 6; row++)
         {
             for (int col = 0; col < 8; col++)
@@ -1277,7 +1276,10 @@ public class Main : MonoBehaviour
                 s += grid[row, col].GetColor() == "Pink" ? "I " : grid[row, col].GetColor()[0] + " ";
             }
 
-            s += "\n";
+
+            Logging(s);
+            s = "";
+
         }
 
         Logging(s);
