@@ -13,7 +13,6 @@ public class Main : MonoBehaviour
     //todo tp
     //todo autosolve
     //todo colorblind
-    private KMBombInfo Bomb;
     private KMAudio Audio;
 
     private Cell[,] grid;
@@ -119,19 +118,20 @@ public class Main : MonoBehaviour
         GetComponent<KMSelectable>().OnDefocus += delegate () { focused = false; };
 
         grid = new Cell[6, 8];
+
+        for (int row = 0; row < 6; row++)
+        {
+            for (int col = 0; col < 8; col++)
+            {
+                int index = row * 8 + col;
+                grid[row, col] = new Cell(row, col, buttons[index]);
+
+                buttons[index].OnInteract += delegate () { buttons[index].AddInteractionPunch(.1f); if (pressable && !fightingMonster && !ModuleSolved) StartCoroutine(ButtonPress(buttons[index])); return false; };
+            }
+        }
+
         if (!debug)
         {
-            for (int row = 0; row < 6; row++)
-            {
-                for (int col = 0; col < 8; col++)
-                {
-                    int index = row * 8 + col;
-                    grid[row, col] = new Cell(row, col, buttons[index]);
-
-                    buttons[index].OnInteract += delegate () { if(pressable && !fightingMonster && !ModuleSolved) StartCoroutine(ButtonPress(buttons[index])); return false; };
-                }
-            }
-
             SetNeighbors();
 
             bool validMaze = false;
@@ -145,7 +145,7 @@ public class Main : MonoBehaviour
 
             if (count == 100 && !validMaze)
             {
-                Logging("Couldn't generate a good maze. Generate default maze...");
+                Logging("Couldn't generate a good maze. Generating default maze...");
 
                 for (int row = 0; row < 6; row++)
                 {
@@ -200,23 +200,24 @@ public class Main : MonoBehaviour
 
         int[,] grid = new int[,]
         {
-        { 0, 1, 3, 1, 1, 1, 0, 0 },
-        { 5, 4, 5, 0, 0, 2, 1, 1 },
-        { 0, 3, 0, 3, 5, 1, 5, 1},
-        { 3, 3, 0, 5, 0, 1, 3, 2},
-        { 2, 0, 0, 5, 0, 4, 5, 5},
-        { 0, 1, 3, 3, 2, 5, 3, 1} 
+        { 3, 3, 3, 1, 5, 3, 3, 2 },
+        { 5, 1, 1, 3, 2, 3, 5, 2 },
+        { 5, 1, 2, 0, 0, 0, 4, 1 },
+        { 2, 2, 1, 1, 2, 0, 4, 2 },
+        { 1, 3, 4, 3, 1, 4, 1, 1 },
+        { 3, 0, 0, 5, 3, 0, 2, 0 },
+
         };
 
         /*
         int[,] grid2 = new int[,]
         {
-        { , , , , , , , , },
-        { , , , , , , , , },
-        { , , , , , , , , },
-        { , , , , , , , , },
-        { , , , , , , , , },
-        { , , , , , , , , },
+        { , , , , , , , },
+        { , , , , , , , },
+        { , , , , , , , },
+        { , , , , , , , },
+        { , , , , , , , },
+        { , , , , , , , },
 
         };*/
 
@@ -918,7 +919,7 @@ public class Main : MonoBehaviour
                     yield break;
                 }
 
-                Logging("Pressed: " + selectedCell.ToString());
+                Logging("Pressed " + selectedCell.ToString());
 
                 switch (selectedCell.Tile)
                 {
@@ -1014,7 +1015,6 @@ public class Main : MonoBehaviour
         monsterHealth = 9;
         maxHealth = 9;
         currentPercentage = 1f;
-        //todo play sound of fight encounter
         Audio.PlaySoundAtTransform(audioClips[1].name, transform);
         yield return new WaitForSeconds(audioClips[1].length + .1f);
         float flashLength = 0.12f;
@@ -1038,8 +1038,8 @@ public class Main : MonoBehaviour
             yield return MoveBar();
 
         } while (monsterHealth > 0);
+
         Audio.PlaySoundAtTransform(audioClips[3].name, transform);
-        fightingMonster = false;
         fightingGameObjects.SetActive(false);
         gridGameObject.SetActive(true);
         fightingMonster = false;
