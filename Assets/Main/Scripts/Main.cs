@@ -91,7 +91,6 @@ public class Main : MonoBehaviour
     {
         exclamationPoint.SetActive(false);
         rectTransform = currentHealthBar.GetComponent<RectTransform>();
-        Bomb = GetComponent<KMBombInfo>();
         Audio = GetComponent<KMAudio>();
         ModuleSolved = false;
         ModuleId = ModuleIdCounter++;
