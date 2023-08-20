@@ -858,7 +858,6 @@ public class Main : MonoBehaviour
     IEnumerator ButtonPress(KMSelectable button)
     {
         pressable = false;
-        button.AddInteractionPunch(.1f);
         Cell selectedCell = GetCell(button);
         Cell playerCell = FindPlayer();
 
@@ -907,6 +906,7 @@ public class Main : MonoBehaviour
 
             if (!neighbors.Contains(selectedCell))
             {
+                pressable = true;
                 yield break;
             }
 
@@ -985,11 +985,11 @@ public class Main : MonoBehaviour
                     case Tile.Green:
                         yield return SetPlayer(selectedCell, false, walkingTime);
                         yield return HandleGreenTiles();
-                        pressable = true;
                         if (FindPlayer().Col == 7)
                         {
                             Solve();
                         }
+                        pressable = true;
                         yield break;
                 }
                 yield return SetPlayer(selectedCell, false, walkingTime);
