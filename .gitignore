@@ -32,3 +32,6 @@ Assets/Generated
 Gen
 
 .idea
+
+# VS Code settings file
+settings.json
