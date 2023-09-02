@@ -1,11 +1,11 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 using KModkit;
-using Rnd = UnityEngine.Random;
+using UnityEngine;
 using UnityEngine.UI;
-using System;
+using Rnd = UnityEngine.Random;
 
 
 public class Main : MonoBehaviour
@@ -17,7 +17,8 @@ public class Main : MonoBehaviour
 
     private Cell[,] grid;
 
-    private KMSelectable[] buttons;
+    [SerializeField]
+    private CellSelectable[] buttons;
 
     [SerializeField]
     private Animator animator;
@@ -59,7 +60,7 @@ public class Main : MonoBehaviour
     [SerializeField]
     private AudioClip[] audioClips; //knife, encounter 1, encounter 2, love, hit, walk, victory, chomp
 
-    private KMSelectable resetButon;
+    private KMSelectable resetButton;
 
     private bool focused;
 
@@ -96,74 +97,22 @@ public class Main : MonoBehaviour
         ModuleId = ModuleIdCounter++;
 
         heart.SetActive(false);
-        KMSelectable[] tempButtons = GetComponent<KMSelectable>().Children;
 
-        buttons = Enumerable.Range(0, tempButtons.Length - 1).Select(i => tempButtons[i]).ToArray();
-
-        resetButon = tempButtons[tempButtons.Length - 1];
+        resetButton = GetComponent<KMSelectable>().Children.Last();
 
         
-        resetButon.OnInteract += delegate () { if (pressable && !fightingMonster && !ModuleSolved) { resetButon.AddInteractionPunch(.1f); ResetModule(); } return false; };
+        resetButton.OnInteract += delegate () { if (pressable && !fightingMonster && !ModuleSolved) { resetButton.AddInteractionPunch(.1f); ResetModule(); } return false; };
 
 
-        Cell.redMaterial = materials[0];
-        Cell.orangeMaterial = materials[1];
-        Cell.greenMaterial = materials[2];
-        Cell.blueMaterial = materials[3];
-        Cell.purpleMaterial = materials[4];
-        Cell.pinkMaterial = materials[5];
+        Cell.red = materials[0].color;
+        Cell.orange = materials[1].color;
+        Cell.green = materials[2].color;
+        Cell.blue = materials[3].color;
+        Cell.purple = materials[4].color;
+        Cell.pink = materials[5].color;
 
         GetComponent<KMSelectable>().OnFocus += delegate () { focused = true; };
         GetComponent<KMSelectable>().OnDefocus += delegate () { focused = false; };
-
-        grid = new Cell[6, 8];
-
-        for (int row = 0; row < 6; row++)
-        {
-            for (int col = 0; col < 8; col++)
-            {
-                int index = row * 8 + col;
-                grid[row, col] = new Cell(row, col, buttons[index]);
-
-                buttons[index].OnInteract += delegate () { buttons[index].AddInteractionPunch(.1f); if (pressable && !fightingMonster && !ModuleSolved) StartCoroutine(ButtonPress(buttons[index])); return false; };
-            }
-        }
-
-        if (!debug)
-        {
-            SetNeighbors();
-
-            bool validMaze = false;
-
-            int count = 0;
-            do
-            {
-                count++;
-                validMaze = GenerateMaze();
-            } while (!validMaze && count < 100);
-
-            if (count == 100 && !validMaze)
-            {
-                Logging("Couldn't generate a good maze. Generating default maze...");
-
-                for (int row = 0; row < 6; row++)
-                {
-                    Tile tile = row == 2 || row == 3 ? Tile.Pink : Tile.Red;
-
-                    for (int col = 0; col < 8; col++)
-                    {
-                        int index = row * 8 + col;
-                        grid[row, col] = new Cell(row, col, buttons[index], tile);
-                    }
-                }
-            }
-        }
-
-        else
-        {
-            GenerateDebugMaze();
-            SetNeighbors();
-        }
 
         SetSmell(Smell.None);
     }
@@ -835,7 +784,7 @@ public class Main : MonoBehaviour
     {
         foreach (Cell c in grid)
         {
-            if (c.Button == button)
+            if (c.Button.Selectable == button)
             {
                 return c;
             }
@@ -1146,17 +1095,57 @@ public class Main : MonoBehaviour
 
     void Start()
     {
+        grid = new Cell[6, 8];
+        for (int row = 0; row < 6; row++)
+        {
+            for (int col = 0; col < 8; col++)
+            {
+                int index = row * 8 + col;
+                grid[row, col] = new Cell(row, col, buttons[index]);
+                buttons[index].Selectable.OnInteract += delegate () { buttons[index].Selectable.AddInteractionPunch(.1f); if (pressable && !fightingMonster && !ModuleSolved) StartCoroutine(ButtonPress(buttons[index].Selectable)); return false; };
+            }
+        }
+        if (!debug)
+        {
+            SetNeighbors();
+
+            bool validMaze = false;
+
+            int count = 0;
+            do
+            {
+                count++;
+                validMaze = GenerateMaze();
+            } while (!validMaze && count < 100);
+
+            if (count == 100 && !validMaze)
+            {
+                Logging("Couldn't generate a good maze. Generating default maze...");
+
+                for (int row = 0; row < 6; row++)
+                {
+                    Tile tile = row == 2 || row == 3 ? Tile.Pink : Tile.Red;
+
+                    for (int col = 0; col < 8; col++)
+                    {
+                        int index = row * 8 + col;
+                        grid[row, col] = new Cell(row, col, buttons[index], tile);
+                    }
+                }
+            }
+        }
+
+        else
+        {
+            GenerateDebugMaze();
+            SetNeighbors();
+        }
         gridGameObject.SetActive(true);
         fightingGameObjects.SetActive(false);
         pressable = true;
         fightingMonster = false;
         LogGrid();
         Logging($"Final Answer: " + LogList(recursionCellList));
-    }
-
-    void Update()
-    {
-
     }
 
     void SetSmell(Smell smell)
