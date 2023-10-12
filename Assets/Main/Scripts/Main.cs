@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using KModkit;
+using NUnit.Framework.Constraints;
 using UnityEngine;
 using UnityEngine.UI;
 using Rnd = UnityEngine.Random;
@@ -84,12 +85,17 @@ public class Main : MonoBehaviour
     private float currentPercentage;
     private bool printDebugLines = false;
     private bool spacePress;
+    private bool tpSpacePress;
 
+    SpriteRenderer barSpriteRenderer;
+    float[] greenHit = new float[] { -0.0927f, -0.0815f };
+    float[] yellowHit = new float[] { -0.1159f, -0.0586f };
 
 
 
     void Awake()
     {
+        barSpriteRenderer = bar.transform.GetComponent<SpriteRenderer>();
         exclamationPoint.SetActive(false);
         rectTransform = currentHealthBar.GetComponent<RectTransform>();
         Audio = GetComponent<KMAudio>();
@@ -147,15 +153,15 @@ public class Main : MonoBehaviour
     {
 
         int[,] grid = new int[,]
-        {
-        { 3, 3, 3, 1, 5, 3, 3, 2 },
-        { 5, 1, 1, 3, 2, 3, 5, 2 },
-        { 5, 1, 2, 0, 0, 0, 4, 1 },
-        { 2, 2, 1, 1, 2, 0, 4, 2 },
-        { 1, 3, 4, 3, 1, 4, 1, 1 },
-        { 3, 0, 0, 5, 3, 0, 2, 0 },
+       {
+        { (int)Tile.Pink, (int)Tile.Pink, (int)Tile.Red, (int)Tile.Green, (int)Tile.Red, (int)Tile.Red, (int)Tile.Blue, (int)Tile.Orange},
+        { (int)Tile.Blue, (int)Tile.Red, (int)Tile.Red, (int)Tile.Blue, (int)Tile.Blue, (int)Tile.Orange, (int)Tile.Pink, (int)Tile.Blue},
+        { (int)Tile.Pink, (int)Tile.Blue, (int)Tile.Green, (int)Tile.Green, (int)Tile.Blue, (int)Tile.Orange, (int)Tile.Orange, (int)Tile.Orange},
+        { (int)Tile.Green, (int)Tile.Green, (int)Tile.Red, (int)Tile.Green, (int)Tile.Orange, (int)Tile.Pink, (int)Tile.Pink, (int)Tile.Red},
+        { (int)Tile.Blue, (int)Tile.Pink, (int)Tile.Pink, (int)Tile.Orange, (int)Tile.Purple, (int)Tile.Pink, (int)Tile.Purple, (int)Tile.Green},
+        { (int)Tile.Blue, (int)Tile.Red, (int)Tile.Orange, (int)Tile.Orange, (int)Tile.Green, (int)Tile.Pink, (int)Tile.Red, (int)Tile.Green},
 
-        };
+       };
 
         /*
         int[,] grid2 = new int[,]
@@ -267,7 +273,19 @@ public class Main : MonoBehaviour
 
                 if (foundPath)
                 {
-                    break;
+                    //check to see if the path has duplicate cells if it does, the found path should not be true.
+                    //this is more of a logic error with the path finding since it's using recursion
+                    //if there was a way to make sure that the shortest path would be found, i would do it
+
+                    if (recursionCellList.Count != recursionCellList.Distinct().Count())
+                    {
+                        foundPath = false;
+                    }
+
+                    else
+                    {
+                        break;
+                    }
                 }
             }
 
@@ -284,6 +302,8 @@ public class Main : MonoBehaviour
     {
         recursionDirections = new List<string>();
         recursionCellList = new List<Cell>();
+        recursionAtGoal = false;
+
         foreach (Cell c in grid)
         {
             c.Visited = false;
@@ -753,7 +773,7 @@ public class Main : MonoBehaviour
 
             if (newList.Any(x => x.Col == 7) || current.Col == 7)
             {
-                if (current.Col == 7)
+                if (current.Col == 7 && newList.Last().Tile != Tile.Purple)
                 {
                     newList.Add(current);
                 }
@@ -888,18 +908,12 @@ public class Main : MonoBehaviour
                         break;
                     case Tile.Purple:
 
-                        string direction = playerCell.Up == selectedCell ? "up" :
-                                           playerCell.Down == selectedCell ? "down" :
-                                           playerCell.Right == selectedCell ? "right" : "left";
-
+                        string direction = GetDirection(playerCell, selectedCell);
                         Cell currentCell = playerCell;
 
                         do
                         {
-                            Cell nextCell = direction == "up" ? currentCell.Up :
-                                            direction == "down" ? currentCell.Down :
-                                            direction == "right" ? currentCell.Right : currentCell.Left;
-
+                            Cell nextCell = GetNewCellViaDirection(currentCell, direction);
                             yield return SetPlayer(nextCell, false, walkingTime);
                             SetSmell(Smell.Lemon);
                             currentCell = nextCell;
@@ -996,6 +1010,7 @@ public class Main : MonoBehaviour
     IEnumerator MoveBar()
     {
         spacePress = false;
+        tpSpacePress = false;
         float moveWhiteMaxTime = 1.25f;
         float elaspedTime;
 
@@ -1004,12 +1019,13 @@ public class Main : MonoBehaviour
         Vector3 rightPos = new Vector3(-0.0079f, -0.0633f, 0.0541f);
 
         bar.transform.localPosition = leftPos;
+
         do
         {
             elaspedTime = 0f;
             while (elaspedTime < moveWhiteMaxTime)
             {
-                if (focused && Input.GetKeyDown(KeyCode.Space))
+                if (focused && (Input.GetKeyDown(KeyCode.Space) || tpSpacePress))
                 {
                     spacePress = true;
                     break;
@@ -1018,6 +1034,24 @@ public class Main : MonoBehaviour
                 float t = elaspedTime / moveWhiteMaxTime;
                 bar.transform.localPosition = Vector3.Lerp(leftPos, rightPos, t);
                 elaspedTime += Time.deltaTime;
+
+                float barX = bar.transform.localPosition.x;
+
+                if (barX >= greenHit[0] && barX <= greenHit[1])
+                {
+                    barSpriteRenderer.color = Color.green;
+                }
+
+                else if (barX >= yellowHit[0] && barX <= yellowHit[1])
+                {
+                    barSpriteRenderer.color = Color.yellow;
+                }
+
+                else
+                {
+                    barSpriteRenderer.color = Color.white;
+                }
+
                 yield return null;
             }
 
@@ -1030,7 +1064,7 @@ public class Main : MonoBehaviour
             elaspedTime = 0f;
             while (elaspedTime < moveWhiteMaxTime)
             {
-                if (focused && Input.GetKeyDown(KeyCode.Space))
+                if (focused && (Input.GetKeyDown(KeyCode.Space) || tpSpacePress))
                 {
                     spacePress = true;
                     break;
@@ -1039,6 +1073,24 @@ public class Main : MonoBehaviour
                 float t = elaspedTime / moveWhiteMaxTime;
                 bar.transform.localPosition = Vector3.Lerp(rightPos, leftPos, t);
                 elaspedTime += Time.deltaTime;
+
+                float barX = bar.transform.localPosition.x;
+
+                if (barX >= greenHit[0] && barX <= greenHit[1])
+                {
+                    barSpriteRenderer.color = Color.green;
+                }
+
+                else if (barX >= yellowHit[0] && barX <= yellowHit[1])
+                {
+                    barSpriteRenderer.color = Color.yellow;
+                }
+
+                else
+                {
+                    barSpriteRenderer.color = Color.white;
+                }
+
                 yield return null;
             }
 
@@ -1054,16 +1106,13 @@ public class Main : MonoBehaviour
         Audio.PlaySoundAtTransform(audioClips[0].name, transform);
         yield return new WaitForSeconds(audioClips[0].length);
 
-        float[] greenHit = new float[] { -0.0881f, -0.0868f };
-        float[] yellowHit = new float[] { -0.1159f, -0.0586f };
-
-        float barY = bar.transform.localPosition.y;
-        if (barY >= greenHit[0] && barY <= greenHit[1])
+        float barX = bar.transform.localPosition.x;
+        if (barX >= greenHit[0] && barX <= greenHit[1])
         {
             monsterHealth -= maxHealth / 2;
         }
 
-        else if (barY >= yellowHit[0] && barY <= yellowHit[1])
+        else if (barX >= yellowHit[0] && barX <= yellowHit[1])
         {
             monsterHealth -= maxHealth / 3;
         }
@@ -1226,70 +1275,143 @@ public class Main : MonoBehaviour
         Logging(s);
     }
 
+    private string GetDirection(Cell c1, Cell c2)
+    {
+        return c1.Up == c2 ? "up" : c1.Down == c2 ? "down" : c1.Right == c2 ? "right" : "left";
+    }
+
+    private Cell GetNewCellViaDirection(Cell c, string direction)
+    {
+        return direction == "up" ? c.Up :
+               direction == "down" ? c.Down :
+               direction == "right" ? c.Right : c.Left;
+    }
+
 #pragma warning disable 414
     private readonly string TwitchHelpMessage = @"Use `!{0} row col` to press the cell with `1 1` being top left. Use `!{0} reset` to reset the module. If you land on a green tile, the fighting will be done for you.";
 #pragma warning restore 414
 
     IEnumerator ProcessTwitchCommand(string Command)
     {
-        yield return null; //i have no idea why i am getting bugs and im too frustrated to figure out why they are happenning
-        //string[] commands = Command.ToUpper().Trim().Split(' ');
+        yield return null;
+        string[] commands = Command.ToUpper().Trim().Split(' ');
 
-        //if (Command == "RESET")
-        //{
-        //    resetButon.OnInteract();
-        //    yield break;
-        //}
+        if (Command == "RESET")
+        {
+            resetButton.OnInteract();
+            yield break;
+        }
 
-        //if(commands.Length != 2) 
-        //{
-        //    yield return "sendtochaterror not enough or too many commands to select cell";
-        //}
+        if (commands.Length != 2)
+        {
+            yield return "sendtochaterror not enough or too many commands to select cell";
+            yield break;
+        }
 
-        //int row, col;
+        int row, col;
 
-        //if (!int.TryParse(commands[0], out row) || !(row >=1 && row <= 6))
-        //{
-        //    yield return $"sendtochaterror `{commands[0]}` is not a valid row";
+        if (!int.TryParse(commands[0], out row) || !(row >= 1 && row <= 6))
+        {
+            yield return $"sendtochaterror `{commands[0]}` is not a valid row";
+            yield break;
 
-        //}
+        }
 
-        //if (!int.TryParse(commands[1], out col) || !(col >= 1 && col <= 8))
-        //{
-        //    yield return $"sendtochaterror `{commands[1]}` is not a valid column";
-        //}
+        if (!int.TryParse(commands[1], out col) || !(col >= 1 && col <= 8))
+        {
+            yield return $"sendtochaterror `{commands[1]}` is not a valid column";
+            yield break;
+        }
 
-        //row--;
-        //col--;
+        row--;
+        col--;
 
-        //KMSelectable button = buttons[row * 8 + col];
-        //button.OnInteract();
-        //Cell cell = GetCell(button);
+        KMSelectable button = buttons[row * 8 + col].gameObject.GetComponent<KMSelectable>();
+        Cell cell = GetCell(button);
+        Cell playerCell = null;
+        Cell upcomingGreenCell = null;
+
+        if (cell.Tile == Tile.Purple)
+        {
+            //if the tile is purple, check to see where the player is (the player will always be on the grid)
+            playerCell = FindPlayer();
+
+            //depending on the direction the player is relative to the purple tile, check that direction one more unit and see if it's either purple or green
+            string direction = GetDirection(playerCell, cell);
+
+            Cell nextCell = GetNewCellViaDirection(cell, direction);
+
+            //if it's purple, move in that direction again
+            while (nextCell.Tile == Tile.Purple)
+            {
+                nextCell = GetNewCellViaDirection(nextCell, direction);
+            }
+
+            //if it is green, then hold this cell in upcomingGreenCell
+            if (nextCell.Tile == Tile.Green)
+            {
+                upcomingGreenCell = nextCell;
+            }
+        }
+
+        button.OnInteract();
+        playerCell = FindPlayer();
+
+        //if upcoming greenCell is not null, wait until the playerCell becomes this cell and call HandleFighting
+        if (upcomingGreenCell != null)
+        {
+            while (playerCell != upcomingGreenCell)
+            {
+                playerCell = FindPlayer();
+                yield return null;
+            }
+        }
+
+        if (playerCell.Tile == Tile.Green)
+        {
+            yield return HandleFighting();
+        }
+
+        while (!pressable)
+        {
+            yield return null;
+        }
 
 
-        //Cell playerCell = FindPlayer();
-
-        //if ((playerCell == null || playerCell.Neighbors.Contains(cell)) && cell.Tile == Tile.Green)
-        //{
-        //    //wait for fight to be active
-        //    yield return new WaitForSeconds(5f);
-        //    yield return HandleFighting();
-        //}
     }
 
     IEnumerator TwitchHandleForcedSolve()
     {
-        yield return null;
+        focused = true;
+        yield return ProcessTwitchCommand("Reset");
+
+        foreach (Cell c in recursionCellListSimplified)
+        {
+            string s = c.ToString().Replace("(","").Replace(")", "");
+            yield return ProcessTwitchCommand(s);
+        }
+
+        while (!ModuleSolved)
+        {
+            yield return null;
+        }
     }
 
     IEnumerator HandleFighting()
     {
-        float time = audioClips[0].length + audioClips[4].length;
+        //wait for fight to be active
+        while (gridGameObject.activeSelf)
+        {
+            yield return null;
+        }
         do 
         {
-            bar.transform.localPosition = new Vector3(-0.0868f, -0.0633f, 0.0541f);
-            spacePress = true;
-            yield return new WaitForSeconds(time);
+            float barX = bar.transform.localPosition.x;
+            if (barX >= greenHit[0] && barX <= greenHit[1])
+            {
+                tpSpacePress = true;
+            }
+            yield return null;
         } while (!gridGameObject.activeSelf);
     }
 }
