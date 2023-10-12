@@ -154,13 +154,12 @@ public class Main : MonoBehaviour
 
         int[,] grid = new int[,]
        {
-        { (int)Tile.Pink, (int)Tile.Pink, (int)Tile.Red, (int)Tile.Green, (int)Tile.Red, (int)Tile.Red, (int)Tile.Blue, (int)Tile.Orange},
-        { (int)Tile.Blue, (int)Tile.Red, (int)Tile.Red, (int)Tile.Blue, (int)Tile.Blue, (int)Tile.Orange, (int)Tile.Pink, (int)Tile.Blue},
-        { (int)Tile.Pink, (int)Tile.Blue, (int)Tile.Green, (int)Tile.Green, (int)Tile.Blue, (int)Tile.Orange, (int)Tile.Orange, (int)Tile.Orange},
-        { (int)Tile.Green, (int)Tile.Green, (int)Tile.Red, (int)Tile.Green, (int)Tile.Orange, (int)Tile.Pink, (int)Tile.Pink, (int)Tile.Red},
-        { (int)Tile.Blue, (int)Tile.Pink, (int)Tile.Pink, (int)Tile.Orange, (int)Tile.Purple, (int)Tile.Pink, (int)Tile.Purple, (int)Tile.Green},
-        { (int)Tile.Blue, (int)Tile.Red, (int)Tile.Orange, (int)Tile.Orange, (int)Tile.Green, (int)Tile.Pink, (int)Tile.Red, (int)Tile.Green},
-
+        { (int)Tile.Orange, (int)Tile.Pink, (int)Tile.Pink, (int)Tile.Blue, (int)Tile.Green, (int)Tile.Orange, (int)Tile.Pink, (int)Tile.Blue},
+        { (int)Tile.Pink, (int)Tile.Orange, (int)Tile.Pink, (int)Tile.Blue, (int)Tile.Purple, (int)Tile.Blue, (int)Tile.Red, (int)Tile.Red},
+        { (int)Tile.Blue, (int)Tile.Purple, (int)Tile.Orange, (int)Tile.Red, (int)Tile.Pink, (int)Tile.Purple, (int)Tile.Orange, (int)Tile.Orange},
+        { (int)Tile.Pink, (int)Tile.Green, (int)Tile.Purple, (int)Tile.Orange, (int)Tile.Pink, (int)Tile.Orange, (int)Tile.Red, (int)Tile.Orange},
+        { (int)Tile.Blue, (int)Tile.Orange, (int)Tile.Purple, (int)Tile.Purple, (int)Tile.Red, (int)Tile.Green, (int)Tile.Purple, (int)Tile.Red},
+        { (int)Tile.Blue, (int)Tile.Pink, (int)Tile.Blue, (int)Tile.Blue, (int)Tile.Green, (int)Tile.Orange, (int)Tile.Pink, (int)Tile.Pink},
        };
 
         /*
@@ -275,8 +274,7 @@ public class Main : MonoBehaviour
                 {
                     //check to see if the path has duplicate cells if it does, the found path should not be true.
                     //this is more of a logic error with the path finding since it's using recursion
-                    //if there was a way to make sure that the shortest path would be found, i would do it
-
+                    //Best way to avoid this is to use an algorithm that uses shortest path
                     if (recursionCellList.Count != recursionCellList.Distinct().Count())
                     {
                         foundPath = false;
@@ -313,7 +311,7 @@ public class Main : MonoBehaviour
         recursionCurrentCell = start;
         recursionCellList.Add(start);
 
-        if (MoveNorth(end) || MoveEast(end) || MoveSouth(end) || MoveWest(end))
+        if (MoveEast(end) || MoveSouth(end) || MoveWest(end) || MoveNorth(end))
         {
             return true;
         }
@@ -1195,6 +1193,8 @@ public class Main : MonoBehaviour
         fightingMonster = false;
         LogGrid();
         Logging($"Final Answer: " + LogList(recursionCellList));
+        Logging($"Simplified Answer: " + LogList(recursionCellListSimplified));
+
     }
 
     void SetSmell(Smell smell)
