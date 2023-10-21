@@ -946,7 +946,8 @@ public class Main : MonoBehaviour
                         do
                         {
                             Cell nextCell = GetNewCellViaDirection(currentCell, direction);
-                            selectedCell.SetColorBlindTextMeshVisisbilty(false);
+                            currentCell.SetColorBlindTextMeshVisisbilty(true);
+                            nextCell.SetColorBlindTextMeshVisisbilty(false);
                             yield return SetPlayer(nextCell, false, walkingTime);
                             SetSmell(Smell.Lemon);
                             currentCell = nextCell;
@@ -1324,7 +1325,7 @@ public class Main : MonoBehaviour
     }
 
 #pragma warning disable 414
-    private readonly string TwitchHelpMessage = @"Use `!{0} row col` to press the cell with `1 1` being top left. Use `!{0} reset` to reset the module. If you land on a green tile, the fighting will be done for you.";
+    private readonly string TwitchHelpMessage = @"Use `!{0} row col` to press the cell with `1 1` being top left. Put a comma between commands to chain them. Use `!{0} reset` to reset the module. If you land on a green tile, the fighting will be done for you.";
 #pragma warning restore 414
 
     IEnumerator ProcessTwitchCommand(string Command)
