@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using KModkit;
-using NUnit.Framework.Constraints;
 using UnityEngine;
 using UnityEngine.UI;
 using Rnd = UnityEngine.Random;
@@ -11,8 +8,8 @@ using Rnd = UnityEngine.Random;
 
 public class Main : MonoBehaviour
 {
-    //todo tp
-    //todo autosolve
+    //todo tp x
+    //todo autosolve x
     //todo colorblind
     private KMAudio Audio;
 
@@ -125,6 +122,7 @@ public class Main : MonoBehaviour
 
     bool GenerateMaze()
     {
+
         //dont have purple spawn on edges
 
         foreach (Cell c in grid)
@@ -154,12 +152,12 @@ public class Main : MonoBehaviour
 
         int[,] grid = new int[,]
        {
-        { (int)Tile.Orange, (int)Tile.Pink, (int)Tile.Pink, (int)Tile.Blue, (int)Tile.Green, (int)Tile.Orange, (int)Tile.Pink, (int)Tile.Blue},
-        { (int)Tile.Pink, (int)Tile.Orange, (int)Tile.Pink, (int)Tile.Blue, (int)Tile.Purple, (int)Tile.Blue, (int)Tile.Red, (int)Tile.Red},
-        { (int)Tile.Blue, (int)Tile.Purple, (int)Tile.Orange, (int)Tile.Red, (int)Tile.Pink, (int)Tile.Purple, (int)Tile.Orange, (int)Tile.Orange},
-        { (int)Tile.Pink, (int)Tile.Green, (int)Tile.Purple, (int)Tile.Orange, (int)Tile.Pink, (int)Tile.Orange, (int)Tile.Red, (int)Tile.Orange},
-        { (int)Tile.Blue, (int)Tile.Orange, (int)Tile.Purple, (int)Tile.Purple, (int)Tile.Red, (int)Tile.Green, (int)Tile.Purple, (int)Tile.Red},
-        { (int)Tile.Blue, (int)Tile.Pink, (int)Tile.Blue, (int)Tile.Blue, (int)Tile.Green, (int)Tile.Orange, (int)Tile.Pink, (int)Tile.Pink},
+        { (int)Tile.Red, (int)Tile.Orange, (int)Tile.Red, (int)Tile.Green, (int)Tile.Pink, (int)Tile.Blue, (int)Tile.Orange,(int)Tile.Green },
+        { (int)Tile.Blue, (int)Tile.Purple, (int)Tile.Green, (int)Tile.Pink, (int)Tile.Purple, (int)Tile.Blue, (int)Tile.Red,(int)Tile.Blue },
+        { (int)Tile.Green, (int)Tile.Pink, (int)Tile.Orange, (int)Tile.Blue, (int)Tile.Purple, (int)Tile.Orange, (int)Tile.Red,(int)Tile.Red },
+        { (int)Tile.Orange, (int)Tile.Purple, (int)Tile.Purple, (int)Tile.Orange, (int)Tile.Pink, (int)Tile.Red, (int)Tile.Pink,(int)Tile.Red },
+        { (int)Tile.Red, (int)Tile.Red, (int)Tile.Pink, (int)Tile.Red, (int)Tile.Blue, (int)Tile.Blue, (int)Tile.Blue,(int)Tile.Blue },
+        { (int)Tile.Orange, (int)Tile.Orange, (int)Tile.Orange, (int)Tile.Red, (int)Tile.Red, (int)Tile.Orange, (int)Tile.Orange,(int)Tile.Pink },
        };
 
         /*
@@ -1049,7 +1047,6 @@ public class Main : MonoBehaviour
                 {
                     barSpriteRenderer.color = Color.white;
                 }
-
                 yield return null;
             }
 
@@ -1294,7 +1291,8 @@ public class Main : MonoBehaviour
     IEnumerator ProcessTwitchCommand(string Command)
     {
         yield return null;
-        string[] commands = Command.ToUpper().Trim().Split(' ');
+
+        Command = Command.ToUpper();
 
         if (Command == "RESET")
         {
@@ -1302,84 +1300,122 @@ public class Main : MonoBehaviour
             yield break;
         }
 
+        string[] chainCommands = Command.ToUpper().Trim().Split(',').Select(x => x.Trim()).ToArray();
+
+        foreach (string command in chainCommands) 
+        {
+            string response = ValidCommand(command);
+
+            if (response != null)
+            {
+                yield return $"sendtochaterror {response}. Invalid command: `{command}`";
+                yield break;
+            }
+        }
+
+        foreach (string command in chainCommands)
+        {
+            string[] commands = command.Trim().Split(' ');
+
+            int row = int.Parse(commands[0]);
+            int col = int.Parse(commands[1]);
+
+            row--;
+            col--;
+
+
+
+            KMSelectable button = buttons[row * 8 + col].gameObject.GetComponent<KMSelectable>();
+            Cell cell = GetCell(button);
+            Cell playerCell = FindPlayer();
+            Cell upcomingGreenCell = null;
+
+            if (playerCell == null && col != 0)
+            {
+                yield return $"sendtochaterror Your first command does not start in the first column. Given: `{command.Join("")}`";
+                yield break;
+            }
+
+            if (cell.Tile == Tile.Red)
+            {
+                yield return $"sendtochat Stopping since trying to move on a red tile: {command}";
+                yield break;
+            }
+
+            else if (cell.Tile == Tile.Purple)
+            {
+                //if the tile is purple, check to see where the player is (the player will always be on the grid)
+                playerCell = FindPlayer();
+
+                //depending on the direction the player is relative to the purple tile, check that direction one more unit and see if it's either purple or green
+                string direction = GetDirection(playerCell, cell);
+
+                Cell nextCell = GetNewCellViaDirection(cell, direction);
+
+                //if it's purple, move in that direction again
+                while (nextCell.Tile == Tile.Purple)
+                {
+                    nextCell = GetNewCellViaDirection(nextCell, direction);
+                }
+
+                //if it is green, then hold this cell in upcomingGreenCell
+                if (nextCell.Tile == Tile.Green)
+                {
+                    upcomingGreenCell = nextCell;
+                }
+            }
+
+            button.OnInteract();
+            playerCell = FindPlayer();
+
+            //if upcoming greenCell is not null, wait until the playerCell becomes this cell and call HandleFighting
+            if (upcomingGreenCell != null)
+            {
+                while (playerCell != upcomingGreenCell)
+                {
+                    playerCell = FindPlayer();
+                    yield return null;
+                }
+            }
+            Debug.Log("player is not null: " + playerCell != null);
+            Debug.Log("player cell color: " + playerCell.Tile);
+
+            if (playerCell != null && playerCell.Tile == Tile.Green)
+            {
+                yield return HandleFighting();
+            }
+
+            while (!pressable)
+            {
+                yield return null;
+            }
+        }
+    }
+
+    string ValidCommand(string command)
+    {
+        string[] commands = command.Trim().Split(' ');
+
         if (commands.Length != 2)
         {
-            yield return "sendtochaterror not enough or too many commands to select cell";
-            yield break;
+            return "not enough or too many commands to select cell";
         }
 
         int row, col;
 
         if (!int.TryParse(commands[0], out row) || !(row >= 1 && row <= 6))
         {
-            yield return $"sendtochaterror `{commands[0]}` is not a valid row";
-            yield break;
+            return $"`{commands[0]}` is not a valid row";
 
         }
 
         if (!int.TryParse(commands[1], out col) || !(col >= 1 && col <= 8))
         {
-            yield return $"sendtochaterror `{commands[1]}` is not a valid column";
-            yield break;
+            return $"`{commands[1]}` is not a valid column";
         }
 
-        row--;
-        col--;
-
-        KMSelectable button = buttons[row * 8 + col].gameObject.GetComponent<KMSelectable>();
-        Cell cell = GetCell(button);
-        Cell playerCell = null;
-        Cell upcomingGreenCell = null;
-
-        if (cell.Tile == Tile.Purple)
-        {
-            //if the tile is purple, check to see where the player is (the player will always be on the grid)
-            playerCell = FindPlayer();
-
-            //depending on the direction the player is relative to the purple tile, check that direction one more unit and see if it's either purple or green
-            string direction = GetDirection(playerCell, cell);
-
-            Cell nextCell = GetNewCellViaDirection(cell, direction);
-
-            //if it's purple, move in that direction again
-            while (nextCell.Tile == Tile.Purple)
-            {
-                nextCell = GetNewCellViaDirection(nextCell, direction);
-            }
-
-            //if it is green, then hold this cell in upcomingGreenCell
-            if (nextCell.Tile == Tile.Green)
-            {
-                upcomingGreenCell = nextCell;
-            }
-        }
-
-        button.OnInteract();
-        playerCell = FindPlayer();
-
-        //if upcoming greenCell is not null, wait until the playerCell becomes this cell and call HandleFighting
-        if (upcomingGreenCell != null)
-        {
-            while (playerCell != upcomingGreenCell)
-            {
-                playerCell = FindPlayer();
-                yield return null;
-            }
-        }
-
-        if (playerCell.Tile == Tile.Green)
-        {
-            yield return HandleFighting();
-        }
-
-        while (!pressable)
-        {
-            yield return null;
-        }
-
-
+        return null;
     }
-
     IEnumerator TwitchHandleForcedSolve()
     {
         focused = true;
@@ -1399,9 +1435,12 @@ public class Main : MonoBehaviour
 
     IEnumerator HandleFighting()
     {
+        //idk why but chaining commands causes focused to be false for some reason
+        focused = true;
         //wait for fight to be active
         while (gridGameObject.activeSelf)
         {
+            Debug.Log("Waiting");
             yield return null;
         }
         do 
@@ -1413,5 +1452,6 @@ public class Main : MonoBehaviour
             }
             yield return null;
         } while (!gridGameObject.activeSelf);
+        focused = false;
     }
 }
