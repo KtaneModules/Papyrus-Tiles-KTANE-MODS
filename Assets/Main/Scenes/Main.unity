@@ -235,7 +235,7 @@ Prefab:
         type: 2}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: fb579234888a1154386d89b621a741fe, type: 2}
+      objectReference: {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
     - target: {fileID: 114463955581490140, guid: 1c2208c64e22bca478f824b6c4943b7d,
         type: 2}
       propertyPath: cbTextPrefab
