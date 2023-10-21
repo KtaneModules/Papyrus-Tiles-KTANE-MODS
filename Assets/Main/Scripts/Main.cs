@@ -15,6 +15,11 @@ public class Main : MonoBehaviour
 
     private Cell[,] grid;
 
+    private bool colorBlindOn;
+
+    [SerializeField]
+    private TextMesh cbTextPrefab;
+
     [SerializeField]
     private CellSelectable[] buttons;
 
@@ -92,6 +97,7 @@ public class Main : MonoBehaviour
 
     void Awake()
     {
+        colorBlindOn = GetComponent<KMColorblindMode>().ColorblindModeActive;
         barSpriteRenderer = bar.transform.GetComponent<SpriteRenderer>();
         exclamationPoint.SetActive(false);
         rectTransform = currentHealthBar.GetComponent<RectTransform>();
@@ -140,7 +146,23 @@ public class Main : MonoBehaviour
                 RegenerateCell(grid[i, 7]);
                 RegenerateCell(grid[i, 0]);
             }
+
+            
         }
+
+        //color blind
+        if (colorBlindOn)
+        {
+            Debug.Log("colorblind on");
+            foreach (Cell c in grid)
+            {
+                Transform parentTransform = c.Button.transform;
+                c.ColorBlidTextMesh = Instantiate(cbTextPrefab, parentTransform);
+                string color = c.GetColor();
+                c.ColorBlidTextMesh.text = color == "Pink" ? "I" : "" + color[0];
+            }
+        }
+
 
         GetThroughMaze();
 
@@ -814,6 +836,11 @@ public class Main : MonoBehaviour
         foreach (Cell c in grid)
         {
             c.HasPlayer = false;
+
+            if (colorBlindOn)
+            {
+                c.SetColorBlindTextMeshVisisbilty(true);
+            }
         }
 
         heart.SetActive(false);
@@ -851,6 +878,11 @@ public class Main : MonoBehaviour
                     SetSmell(Smell.Orange);
                 }
 
+                if (colorBlindOn)
+                {
+                    selectedCell.SetColorBlindTextMeshVisisbilty(false);
+                }
+
                 Logging("Pressed " + selectedCell.ToString());
                 heart.SetActive(true);
                 yield return SetPlayer(selectedCell, true, walkingTime);
@@ -883,6 +915,7 @@ public class Main : MonoBehaviour
                     yield break;
                 }
 
+                playerCell.SetColorBlindTextMeshVisisbilty(true);
                 Logging("Pressed " + selectedCell.ToString());
 
                 switch (selectedCell.Tile)
@@ -893,11 +926,14 @@ public class Main : MonoBehaviour
                     case Tile.Blue:
                         if (currentSmell == Smell.Orange)
                         {
+                            selectedCell.SetColorBlindTextMeshVisisbilty(false);
                             yield return SetPlayer(selectedCell, false, walkingTime);
                             //todo have a chomping noise play
                             Audio.PlaySoundAtTransform(audioClips[7].name, transform);
                             Strike("Strike! Got bit by pirahnas. Moving back to " + playerCell.ToString());
                             yield return SetPlayer(playerCell, false, runningTime);
+                            playerCell.SetColorBlindTextMeshVisisbilty(false);
+                            selectedCell.SetColorBlindTextMeshVisisbilty(true);
                             pressable = true;
                             yield break;
                         }
@@ -910,6 +946,7 @@ public class Main : MonoBehaviour
                         do
                         {
                             Cell nextCell = GetNewCellViaDirection(currentCell, direction);
+                            selectedCell.SetColorBlindTextMeshVisisbilty(false);
                             yield return SetPlayer(nextCell, false, walkingTime);
                             SetSmell(Smell.Lemon);
                             currentCell = nextCell;
@@ -942,6 +979,7 @@ public class Main : MonoBehaviour
                         yield break;
 
                     case Tile.Green:
+                        selectedCell.SetColorBlindTextMeshVisisbilty(false);
                         yield return SetPlayer(selectedCell, false, walkingTime);
                         yield return HandleGreenTiles();
                         if (FindPlayer().Col == 7)
@@ -951,6 +989,7 @@ public class Main : MonoBehaviour
                         pressable = true;
                         yield break;
                 }
+                selectedCell.SetColorBlindTextMeshVisisbilty(false);
                 yield return SetPlayer(selectedCell, false, walkingTime);
                 pressable = true;
 

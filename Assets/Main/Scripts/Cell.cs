@@ -34,6 +34,8 @@ public class Cell  {
 
     public bool HasPlayer { get; set; }
 
+    public TextMesh ColorBlidTextMesh { get; set; } 
+
     public Cell(int row, int col, CellSelectable button)
     {
         Row = row;
@@ -87,10 +89,8 @@ public class Cell  {
         return Tile.ToString();
     }
 
-    public static bool SameColor(Color c1, Color c2)
+    public void SetColorBlindTextMeshVisisbilty(bool visible)
     {
-        return Mathf.Abs(c1.r - c2.r) < epsilon &&
-               Mathf.Abs(c1.g - c2.g) < epsilon &&
-               Mathf.Abs(c1.b - c2.b) < epsilon;
+        ColorBlidTextMesh.gameObject.SetActive(visible);
     }
 }
