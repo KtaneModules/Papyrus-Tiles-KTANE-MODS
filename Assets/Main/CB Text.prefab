@@ -21,6 +21,7 @@ GameObject:
   - component: {fileID: 4895894616595432}
   - component: {fileID: 23676961377271276}
   - component: {fileID: 102215873574677698}
+  - component: {fileID: 114741003877905726}
   m_Layer: 0
   m_Name: CB Text
   m_TagString: Untagged
@@ -96,3 +97,16 @@ TextMesh:
   m_Color:
     serializedVersion: 2
     rgba: 4278190080
+--- !u!114 &114741003877905726
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1727795404038178}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1005838349, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShaderNames:
+  - GUI/Text Shader

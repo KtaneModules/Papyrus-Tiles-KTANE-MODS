@@ -153,7 +153,6 @@ public class Main : MonoBehaviour
         //color blind
         if (colorBlindOn)
         {
-            Debug.Log("colorblind on");
             foreach (Cell c in grid)
             {
                 Transform parentTransform = c.Button.transform;
@@ -1200,6 +1199,14 @@ public class Main : MonoBehaviour
             {
                 count++;
                 validMaze = GenerateMaze();
+
+                if (colorBlindOn && !validMaze)
+                {
+                    foreach (Cell c in grid)
+                    {
+                        Destroy(c.ColorBlidTextMesh.gameObject);
+                    }
+                }
             } while (!validMaze && count < 100);
 
             if (count == 100 && !validMaze)
@@ -1417,8 +1424,6 @@ public class Main : MonoBehaviour
                     yield return null;
                 }
             }
-            Debug.Log("player is not null: " + playerCell != null);
-            Debug.Log("player cell color: " + playerCell.Tile);
 
             if (playerCell != null && playerCell.Tile == Tile.Green)
             {
@@ -1480,7 +1485,6 @@ public class Main : MonoBehaviour
         //wait for fight to be active
         while (gridGameObject.activeSelf)
         {
-            Debug.Log("Waiting");
             yield return null;
         }
         do 

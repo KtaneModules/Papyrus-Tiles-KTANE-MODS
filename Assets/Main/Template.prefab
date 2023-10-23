@@ -1498,6 +1498,7 @@ GameObject:
   - component: {fileID: 114853960920223876}
   - component: {fileID: 114139553842080666}
   - component: {fileID: 114463955581490140}
+  - component: {fileID: 114568918539667918}
   m_Layer: 0
   m_Name: Template
   m_TagString: Untagged
@@ -10562,6 +10563,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b6d0990d28383f4f9c81f23fca22635, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  cbTextPrefab: {fileID: 102215873574677698, guid: a4c62029cce7bf44f918e8a1368dc1da,
+    type: 2}
   buttons:
   - {fileID: 114550539642412178}
   - {fileID: 114358134267838380}
@@ -10930,6 +10933,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShaderNames:
   - KT/Outline
+--- !u!114 &114568918539667918
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1676409040304040}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1cfb889a07d5fd4e9baed7960bb397f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _colorblindMode: 1
 --- !u!114 &114570430299588062
 MonoBehaviour:
   m_ObjectHideFlags: 1
