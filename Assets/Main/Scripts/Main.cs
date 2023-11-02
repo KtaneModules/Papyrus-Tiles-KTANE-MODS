@@ -11,6 +11,9 @@ public class Main : MonoBehaviour
     //todo tp x
     //todo autosolve x
     //todo colorblind
+
+    
+
     private KMAudio Audio;
 
     private Cell[,] grid;
@@ -173,23 +176,23 @@ public class Main : MonoBehaviour
 
         int[,] grid = new int[,]
        {
-        { (int)Tile.Red, (int)Tile.Orange, (int)Tile.Red, (int)Tile.Green, (int)Tile.Pink, (int)Tile.Blue, (int)Tile.Orange,(int)Tile.Green },
-        { (int)Tile.Blue, (int)Tile.Purple, (int)Tile.Green, (int)Tile.Pink, (int)Tile.Purple, (int)Tile.Blue, (int)Tile.Red,(int)Tile.Blue },
-        { (int)Tile.Green, (int)Tile.Pink, (int)Tile.Orange, (int)Tile.Blue, (int)Tile.Purple, (int)Tile.Orange, (int)Tile.Red,(int)Tile.Red },
-        { (int)Tile.Orange, (int)Tile.Purple, (int)Tile.Purple, (int)Tile.Orange, (int)Tile.Pink, (int)Tile.Red, (int)Tile.Pink,(int)Tile.Red },
-        { (int)Tile.Red, (int)Tile.Red, (int)Tile.Pink, (int)Tile.Red, (int)Tile.Blue, (int)Tile.Blue, (int)Tile.Blue,(int)Tile.Blue },
-        { (int)Tile.Orange, (int)Tile.Orange, (int)Tile.Orange, (int)Tile.Red, (int)Tile.Red, (int)Tile.Orange, (int)Tile.Orange,(int)Tile.Pink },
+        {(int)Tile.Blue,(int)Tile.Blue ,(int)Tile.Blue ,(int)Tile.Pink ,(int)Tile.Orange ,(int)Tile.Red ,(int)Tile.Pink ,(int)Tile.Blue },
+        {(int)Tile.Blue,(int)Tile.Blue ,(int)Tile.Blue ,(int)Tile.Purple ,(int)Tile.Pink ,(int)Tile.Red ,(int)Tile.Green ,(int)Tile.Blue },
+        {(int)Tile.Blue,(int)Tile.Blue ,(int)Tile.Blue ,(int)Tile.Green ,(int)Tile.Blue ,(int)Tile.Pink ,(int)Tile.Purple ,(int)Tile.Orange },
+        {(int)Tile.Blue,(int)Tile.Blue ,(int)Tile.Blue ,(int)Tile.Pink ,(int)Tile.Red ,(int)Tile.Blue ,(int)Tile.Pink ,(int)Tile.Green },
+        {(int)Tile.Blue,(int)Tile.Blue ,(int)Tile.Blue ,(int)Tile.Purple ,(int)Tile.Green ,(int)Tile.Blue ,(int)Tile.Orange ,(int)Tile.Orange },
+        {(int)Tile.Blue,(int)Tile.Blue ,(int)Tile.Blue ,(int)Tile.Orange ,(int)Tile.Orange ,(int)Tile.Blue ,(int)Tile.Blue ,(int)Tile.Red },
        };
 
         /*
         int[,] grid2 = new int[,]
         {
-        { , , , , , , , },
-        { , , , , , , , },
-        { , , , , , , , },
-        { , , , , , , , },
-        { , , , , , , , },
-        { , , , , , , , },
+       {(int)Tile.,(int)Tile. ,(int)Tile. ,(int)Tile. ,(int)Tile. ,(int)Tile. ,(int)Tile. ,(int)Tile. },
+        {(int)Tile.,(int)Tile. ,(int)Tile. ,(int)Tile. ,(int)Tile. ,(int)Tile. ,(int)Tile. ,(int)Tile. },
+        {(int)Tile.,(int)Tile. ,(int)Tile. ,(int)Tile. ,(int)Tile. ,(int)Tile. ,(int)Tile. ,(int)Tile. },
+        {(int)Tile.,(int)Tile. ,(int)Tile. ,(int)Tile. ,(int)Tile. ,(int)Tile. ,(int)Tile. ,(int)Tile. },
+        {(int)Tile.,(int)Tile. ,(int)Tile. ,(int)Tile. ,(int)Tile. ,(int)Tile. ,(int)Tile. ,(int)Tile. },
+        {(int)Tile.,(int)Tile. ,(int)Tile. ,(int)Tile. ,(int)Tile. ,(int)Tile. ,(int)Tile. ,(int)Tile. },
 
         };*/
 
@@ -914,7 +917,11 @@ public class Main : MonoBehaviour
                     yield break;
                 }
 
-                playerCell.SetColorBlindTextMeshVisisbilty(true);
+                if (colorBlindOn)
+                {
+                    playerCell.SetColorBlindTextMeshVisisbilty(true);
+                }
+
                 Logging("Pressed " + selectedCell.ToString());
 
                 switch (selectedCell.Tile)
@@ -925,14 +932,23 @@ public class Main : MonoBehaviour
                     case Tile.Blue:
                         if (currentSmell == Smell.Orange)
                         {
-                            selectedCell.SetColorBlindTextMeshVisisbilty(false);
+                            if (colorBlindOn)
+                            {
+                                selectedCell.SetColorBlindTextMeshVisisbilty(false);
+                            }
+
                             yield return SetPlayer(selectedCell, false, walkingTime);
                             //todo have a chomping noise play
                             Audio.PlaySoundAtTransform(audioClips[7].name, transform);
                             Strike("Strike! Got bit by pirahnas. Moving back to " + playerCell.ToString());
                             yield return SetPlayer(playerCell, false, runningTime);
-                            playerCell.SetColorBlindTextMeshVisisbilty(false);
-                            selectedCell.SetColorBlindTextMeshVisisbilty(true);
+
+                            if (colorBlindOn)
+                            {
+                                playerCell.SetColorBlindTextMeshVisisbilty(false);
+                                selectedCell.SetColorBlindTextMeshVisisbilty(true);
+                            }
+                            
                             pressable = true;
                             yield break;
                         }
@@ -945,8 +961,13 @@ public class Main : MonoBehaviour
                         do
                         {
                             Cell nextCell = GetNewCellViaDirection(currentCell, direction);
-                            currentCell.SetColorBlindTextMeshVisisbilty(true);
-                            nextCell.SetColorBlindTextMeshVisisbilty(false);
+
+                            if (colorBlindOn)
+                            {
+                                currentCell.SetColorBlindTextMeshVisisbilty(true);
+                                nextCell.SetColorBlindTextMeshVisisbilty(false);
+                            }
+
                             yield return SetPlayer(nextCell, false, walkingTime);
                             SetSmell(Smell.Lemon);
                             currentCell = nextCell;
@@ -979,7 +1000,12 @@ public class Main : MonoBehaviour
                         yield break;
 
                     case Tile.Green:
-                        selectedCell.SetColorBlindTextMeshVisisbilty(false);
+
+                        if (colorBlindOn)
+                        { 
+                            selectedCell.SetColorBlindTextMeshVisisbilty(false);
+                        }
+
                         yield return SetPlayer(selectedCell, false, walkingTime);
                         yield return HandleGreenTiles();
                         if (FindPlayer().Col == 7)
@@ -989,7 +1015,12 @@ public class Main : MonoBehaviour
                         pressable = true;
                         yield break;
                 }
-                selectedCell.SetColorBlindTextMeshVisisbilty(false);
+
+                if (colorBlindOn)
+                { 
+                    selectedCell.SetColorBlindTextMeshVisisbilty(false);
+                }
+
                 yield return SetPlayer(selectedCell, false, walkingTime);
                 pressable = true;
 
